@@ -19,9 +19,17 @@ npm run build
 
 The build creates `out/`. By default it targets the domain root, including for Docker: `docker build -t enrique .` then `docker run --rm -p 8080:80 enrique`.
 
-For GitHub Pages, build with `NEXT_PUBLIC_BASE_PATH=/enriques-writing-adventure npm run build` and publish the contents of `out/` to the configured `gh-pages` branch. The resulting site is intended for `https://<owner>.github.io/enriques-writing-adventure/`. Change the base path if the repository path changes. The export includes `.nojekyll` so GitHub serves Next.js `_next` assets.
+For GitHub Pages, the site is built and published by `.github/workflows/pages.yml` on every push to `main`: it runs `npm ci`, builds with `NEXT_PUBLIC_BASE_PATH=/enriques-writing-adventure`, uploads `out/` and deploys it through GitHub Actions Pages. The Pages source must stay set to **GitHub Actions**, not a branch. The resulting site is served at `https://giruagent.github.io/enriques-writing-adventure/`; change the base path in the workflow if the repository path changes. The export includes `.nojekyll` so GitHub serves Next.js `_next` assets. Do not publish by hand-editing `out/` — the directory is generated and git-ignored.
 
 To build the same project-path export locally, run `NEXT_PUBLIC_BASE_PATH=/enriques-writing-adventure npm run build`. Serve `out/` under that path, not at the server root. `npm run test:e2e` builds and serves that production export and exercises it with Playwright, including offline reload. To run the same tests for a root export, use `NEXT_PUBLIC_BASE_PATH='' npm run test:e2e`. The base path must be empty for root or start with `/` and have no trailing slash.
+
+## Maintaining this project
+
+`AGENTS.md` is the operating manual: repository map, the progress-model invariants, artwork and service-worker rules, localization and accessibility requirements, the verification sequence and the release checklist. Read it before changing behaviour.
+
+`docs/DEPLOYMENT.md` is the hosting runbook: how the Pages workflow builds and publishes, how to re-deploy, how to verify that the live CDN really serves the new bytes and worker, how to roll back, and the known failure modes.
+
+Changes to behaviour are expected to update this README (including a `## Version X.Y.Z` section), bump the version in `package.json` and in the footer of `components/Game.tsx`, and bump the `CACHE` name in `public/sw.js` whenever a precached asset or the app shell changes.
 
 ## How to play
 
