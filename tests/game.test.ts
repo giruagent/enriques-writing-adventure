@@ -170,3 +170,18 @@ describe('alphabet dragon progression',()=>{
   for(const [i,c] of dragonCrops.entries()) {expect(c.stage).toBe(i+1);expect(c.x).toBeGreaterThanOrEqual(0);expect(c.y).toBeGreaterThanOrEqual(0);expect(c.x+c.width).toBeLessThanOrEqual(1280);expect(c.y+c.height).toBeLessThanOrEqual(511);expect(c.width).toBeGreaterThan(0);expect(c.height).toBeGreaterThan(0)}
  });
 });
+
+describe('name house progression',()=>{
+ it('counts unique completed name levels including legacy worlds, independently of other sections',async()=>{
+  const g=await import('../lib/game');
+  let p=g.load({getItem:()=>JSON.stringify({unlocked:4,completed:[1,2,3,3],history:[],levels:{name:[3,4],alphabet:[1,2],numbers:[1]}})});
+  expect(g.nameHouseStage(p)).toBe(4);
+  p=g.completeLevel(p,'name',5); p=g.completeLevel(p,'name',5);
+  expect(g.nameHouseStage(p)).toBe(5);
+  expect(g.nameHouseStage(g.load({getItem:()=>JSON.stringify(p)}))).toBe(5);
+  expect(g.nameHouseStage(g.changeName(p,'Ana'))).toBe(0);
+  expect(g.nameHouseStage(g.initial())).toBe(0);
+  for(let n=1;n<=10;n++) p=g.completeLevel(p,'name',n);
+  expect(g.nameHouseStage(p)).toBe(10);
+ });
+});

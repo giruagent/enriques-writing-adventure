@@ -70,3 +70,6 @@ export function completeLevel(p:Progress,section:Section,level:number):Progress 
 export function mansionStage(p:Progress):number {return Math.min(30,new Set([...p.completed.filter(n=>n>=1&&n<=10),...p.levels.name]).size+p.levels.alphabet.length+p.levels.numbers.length);}
 
 export function dragonStage(p:Progress):number {return new Set(p.levels.alphabet.filter(n=>Number.isInteger(n)&&n>=1&&n<=10)).size;}
+
+// Legacy completed worlds and modern levels describe the same Name achievements.
+export function nameHouseStage(p:Progress):number {return new Set([...p.completed,...p.levels.name].filter(n=>Number.isInteger(n)&&n>=1&&n<=10)).size;}

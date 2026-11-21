@@ -59,7 +59,7 @@ test('export installs and reloads offline at its configured scope', async ({page
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([`${base}icon-192.png`, `${base}icon-512.png`]);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(async () => {
-    const cache = await caches.open('enrique-v1.4.0-dragon-1');
+    const cache = await caches.open('enrique-v1.5.0');
     const resources = [...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[src], link[rel=stylesheet]')].map(el => el instanceof HTMLScriptElement ? el.src : el.href).filter(url => url.includes('/_next/static/'));
     return resources.some(url => url.endsWith('.js')) && resources.some(url => url.endsWith('.css')) && (await Promise.all(resources.map(url => cache.match(url)))).every(Boolean);
   })).toBe(true);
@@ -185,7 +185,7 @@ test('name changes require confirmation and sections practice real guides', asyn
  await expect(page.getByRole('button',{name:/Diamond Trail/})).toBeEnabled();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ'); await page.getByRole('button',{name:'Lowercase'}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('abcdefghijklmnopqrstuvwxyz'); await page.getByRole('button',{name:'z',exact:true}).click(); await draw(page,paths.z); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toContainText('Wonderful writing');
  await page.getByRole('button',{name:'Back to map'}).click(); await page.getByRole('button',{name:'Numbers',exact:true}).click(); await page.getByRole('button',{name:'8',exact:true}).click(); await draw(page,paths['8']); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toBeVisible();
- await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.4.0/)).toBeVisible();
+ await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.5.0/)).toBeVisible();
 });
 
 test('all five worlds scale to a changed name and retain honest review', async ({page}) => {
@@ -259,18 +259,18 @@ for(const language of ['en','es'] as const) test(`custom name caption and guided
  await page.getByRole('button',{name:language==='en'?/Back to map/:/Volver al mapa/}).click();
  await page.getByRole('button',{name:language==='en'?'Alphabet':'Abecedario',exact:true}).click(); await page.getByRole('button',{name:'B',exact:true}).click();
  const spoken=()=>page.evaluate(()=>(window as typeof window & {spoken:string[]}).spoken);
- await expect.poll(spoken).toContain(language==='en'?'en-US:Write B. Start at the orange dots and follow the path.':'es-ES:Escribe B. Empieza en los puntos naranjas y sigue el camino.');
+ await expect.poll(spoken).toContain(language==='en'?'en-US:Write B. Start at the numbered markers and follow the path.':'es-ES:Escribe B. Empieza en los números y sigue el camino.');
  await page.getByRole('button',{name:language==='en'?'Speak instructions':'Leer instrucciones'}).click();
  await expect.poll(async()=>(await spoken()).filter(s=>s.includes('B.')).length).toBe(2);
  await draw(page,paths.B);await page.getByRole('button',{name:language==='en'?'Check my writing':'Revisar mi escritura'}).click();await page.getByRole('button',{name:language==='en'?'Continue':'Continuar'}).click();
- await expect.poll(spoken).toContain(language==='en'?'en-US:Write C. Start at the orange dots and follow the path.':'es-ES:Escribe C. Empieza en los puntos naranjas y sigue el camino.');
+ await expect.poll(spoken).toContain(language==='en'?'en-US:Write C. Start at the numbered markers and follow the path.':'es-ES:Escribe C. Empieza en los números y sigue el camino.');
  await page.getByRole('button',{name:language==='en'?/Back to map/:/Volver al mapa/}).click();
  await page.getByRole('button',{name:language==='en'?'Numbers':'Números',exact:true}).click(); await page.getByRole('button',{name:'2',exact:true}).click();
- await expect.poll(spoken).toContain(language==='en'?'en-US:Write 2. Start at the orange dots and follow the path.':'es-ES:Escribe 2. Empieza en los puntos naranjas y sigue el camino.');
+ await expect.poll(spoken).toContain(language==='en'?'en-US:Write 2. Start at the numbered markers and follow the path.':'es-ES:Escribe 2. Empieza en los números y sigue el camino.');
  await page.getByRole('button',{name:language==='en'?'Speak instructions':'Leer instrucciones'}).click();
  await expect.poll(async()=>(await spoken()).filter(s=>s.includes('2.')).length).toBe(2);
  await draw(page,paths['2']);await page.getByRole('button',{name:language==='en'?'Check my writing':'Revisar mi escritura'}).click();await page.getByRole('button',{name:language==='en'?'Continue':'Continuar'}).click();
- await expect.poll(spoken).toContain(language==='en'?'en-US:Write 3. Start at the orange dots and follow the path.':'es-ES:Escribe 3. Empieza en los puntos naranjas y sigue el camino.');
+ await expect.poll(spoken).toContain(language==='en'?'en-US:Write 3. Start at the numbered markers and follow the path.':'es-ES:Escribe 3. Empieza en los números y sigue el camino.');
 });
 
 test('a one-character name has a hidden exercise requiring adult review',async({page})=>{
@@ -302,6 +302,8 @@ test('sequential alphabet and numbers levels grow a persistent mansion only afte
  }
  await expect(page.locator('.mansion figcaption')).toContainText('2 / 30');
  await page.reload();
+ await expect(page.locator('.name-house figcaption')).toContainText('0 / 10');
+ await page.getByRole('button',{name:'Numbers',exact:true}).click();
  await expect(page.locator('.mansion figcaption')).toContainText('2 / 30');
 });
 
@@ -309,11 +311,11 @@ test('Spanish first-level tutorial can be hidden and replayed without blocking d
  await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{language:'es',music:false,speech:false}})));
  await page.goto('./');await page.getByRole('button',{name:'Números',exact:true}).click();
  await page.getByRole('button',{name:/^Nivel 1 /}).click();
- await expect(page.getByText(/Pon el dedo en el punto naranja/)).toBeVisible();
+ await expect(page.getByText(/Pon el dedo en el inicio marcado/)).toBeVisible();
  await page.getByRole('button',{name:'Ocultar pasos'}).click();
- await expect(page.getByText(/Pon el dedo en el punto naranja/)).toBeHidden();
+ await expect(page.getByText(/Pon el dedo en el inicio marcado/)).toBeHidden();
  await page.getByRole('button',{name:'Escuchar los pasos'}).click();
- await expect(page.getByText(/Pon el dedo en el punto naranja/)).toBeVisible();
+ await expect(page.getByText(/Pon el dedo en el inicio marcado/)).toBeVisible();
  await draw(page,paths['0']);await page.getByRole('button',{name:'Revisar mi escritura'}).click();
  await expect(page.getByRole('status')).toContainText('¡Qué bien escribes!');
 });
@@ -321,7 +323,7 @@ test('Spanish first-level tutorial can be hidden and replayed without blocking d
 test('map counter and repeated name sequence track actual progress',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({name:'Al',unlocked:6,completed:[1,2,3,4,5],history:[],settings:{music:false,speech:false}})));
  await page.goto('./');
- await expect(page.locator('.section-heading .progress-pill')).toHaveText('★ 5 / 30');
+ await expect(page.locator('.section-heading .progress-pill')).toHaveText('Name Adventure: 5 / 10');
  await page.getByRole('button',{name:/Rainbow Letters/}).click();
  await expect(page.locator('.letter-row')).toHaveText('AAl');
  await expect(page.locator('.letter-row .current')).toHaveText('A');
@@ -377,7 +379,7 @@ test('dragon stages, real completion, replay, speech and offline persistence',as
  }
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).levels.alphabet)).toEqual([1]);
  const base=new URL(baseURL!).pathname;
- expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.4.0-dragon-1');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.5.0');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
  await context.setOffline(true);await page.reload();await page.getByRole('button',{name:'Alphabet',exact:true}).click();
  await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 1 / 10');
  await expect.poll(()=>page.locator('.dragon-picture img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBeGreaterThan(0);
@@ -385,7 +387,7 @@ test('dragon stages, real completion, replay, speech and offline persistence',as
 
 test('completed alphabet shows final dragon while other sections keep mansion',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{name:[],alphabet:[1,2,3,4,5,6,7,8,9,10],numbers:[]}})));
- await page.goto('./');await expect(page.locator('.mansion')).toBeVisible();
+ await page.goto('./');await expect(page.locator('.name-house')).toBeVisible();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click();await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 10 / 10');await expect(page.locator('.dragon-picture img')).toHaveAttribute('src',/stage-10\.png$/);await expect(page.locator('.mansion')).toHaveCount(0);
  await page.getByRole('button',{name:'Numbers',exact:true}).click();await expect(page.locator('.mansion')).toBeVisible();await expect(page.locator('.dragon-progress')).toHaveCount(0);
 });
@@ -437,4 +439,88 @@ test('all ten dragon stage images decode while offline',async({page,context,base
  const base=new URL(baseURL!).pathname;
  const sizes=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth);img.onerror=()=>reject(new Error(`stage ${i+1} unavailable offline`));img.src=`${base}dragon/stage-${i+1}.png`}))),base);
  expect(sizes).toHaveLength(10);expect(sizes.every(size=>size>0)).toBe(true);
+});
+
+test('name house artwork, offline cache and reduced motion', async ({page,context,baseURL})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:3,completed:[1,2],history:[],levels:{name:[2],alphabet:[1],numbers:[1]}})));
+ await page.goto('./');
+ await expect(page.locator('.name-house')).toHaveAttribute('aria-label','Our growing mansion: 2 / 10');
+ await expect(page.locator('.name-house img')).toHaveAttribute('src',/casa_nivel_02\.png$/);
+ expect(await page.locator('.page-transition').evaluate(e=>e.getAnimations().length)).toBe(0);
+ await page.evaluate(()=>navigator.serviceWorker.ready);
+ const base=new URL(baseURL!).pathname;
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.5.0');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`)))).every(Boolean)},base)).toBe(true);
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click(); await expect(page.locator('.dragon-progress')).toBeVisible(); await expect(page.locator('.name-house')).toHaveCount(0);
+ await page.getByRole('button',{name:'Numbers',exact:true}).click(); await expect(page.locator('.mansion')).toBeVisible();
+ await context.setOffline(true); await page.reload(); await expect(page.locator('.name-house img')).toBeVisible();
+ expect(await page.locator('.name-house img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBe(512);
+ const widths=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth);img.onerror=()=>reject(new Error('House unavailable offline'));img.src=`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`}))),base);
+ expect(widths).toEqual(Array(10).fill(512));
+});
+
+test('rapid section navigation leaves a usable latest screen',async({page})=>{
+ await page.goto('./');
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click();
+ await page.getByRole('button',{name:'Numbers',exact:true}).click();
+ await page.getByRole('button',{name:'Name Adventure',exact:true}).click();
+ await expect(page.locator('.name-house')).toBeVisible();
+ await page.getByRole('button',{name:/Letter Meadow/}).click();
+ await expect(page.getByRole('application',{name:'Write E'})).toBeVisible();
+});
+
+test('reduced motion disables root smooth scrolling', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('./');
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('smooth');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
+});
+
+for (const language of ['en', 'es'] as const) {
+  test(`total stars remain distinct from section progress (${language})`, async ({page}) => {
+    await page.addInitScript(lang => localStorage.setItem('enrique-adventure-v1', JSON.stringify({
+      unlocked:3, completed:[1,2], history:[], levels:{name:[1,2], alphabet:[1], numbers:[1,2,3]}, settings:{language:lang}
+    })), language);
+    await page.goto('./');
+    const total = language === 'en' ? 'Total stars across all adventures: 6 / 30' : 'Estrellas totales de todas las aventuras: 6 / 30';
+    await expect(page.getByRole('img',{name:total})).toHaveCount(1);
+    await expect(page.locator('.section-heading .progress-pill')).toHaveText(language === 'en' ? 'Name Adventure: 2 / 10' : 'Aventura del nombre: 2 / 10');
+    await page.getByRole('button',{name:language === 'en' ? 'Alphabet' : 'Abecedario',exact:true}).click();
+    await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label', language === 'en' ? 'Alphabet dragon: 1 / 10' : 'Dragón del abecedario: 1 / 10');
+    await page.getByRole('button',{name:/^(Level|Nivel) 1 /}).first().click();
+    await expect(page.getByRole('img',{name:total})).toHaveCount(2);
+  });
+}
+
+test('numbered guides and replay remain usable on phone and tablet', async ({page}, testInfo) => {
+ for (const [name,width,height] of [['iphone',390,844],['ipad',768,1024]] as const) {
+  await page.setViewportSize({width,height});
+  await page.goto('./');
+  await page.getByRole('button',{name:/Letter Meadow/}).click();
+  const pad=page.getByRole('application',{name:'Write E'});
+  await expect(page.getByText('4 strokes',{exact:false})).toBeVisible();
+  await expect(pad.locator('text')).toHaveText(['1','2','3','4']);
+  const numberBox=await pad.locator('text').first().boundingBox(); expect(numberBox!.height).toBeGreaterThanOrEqual(16);
+  expect(await pad.locator('g').first().getAttribute('pointer-events')).toBe('none');
+  await expect(page.getByRole('button',{name:/Watch how to write/})).toBeVisible();
+  await page.locator('.writing-area').scrollIntoViewIfNeeded();
+  await testInfo.attach(`${name}-exercise`,{body:await page.screenshot(),contentType:'image/png'});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole('button',{name:/Watch how to write/}).click();
+  await expect(page.getByRole('img',{name:'Demonstration of E, 4 strokes'})).toBeVisible();
+  await draw(page,[paths.E[0]]);
+  await expect(page.locator('svg.pad > path[stroke="#253b75"]')).toHaveCount(1);
+ }
+});
+
+test('reduced motion replay is static and Spanish instructions explain lifting',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{language:'es'}})));
+ await page.goto('./');await page.getByRole('button',{name:/Pradera de letras/}).click();
+ await expect(page.getByText(/Levanta el dedo entre trazos/)).toBeVisible();
+ await page.getByRole('button',{name:/Ver cómo se escribe/}).click();
+ const paths=page.locator('.demo-stroke');await expect(paths).toHaveCount(4);
+ expect(await paths.first().evaluate(el=>getComputedStyle(el).animationName)).toBe('none');
+ expect(await paths.first().evaluate(el=>getComputedStyle(el).strokeDashoffset)).toBe('0px');
 });
