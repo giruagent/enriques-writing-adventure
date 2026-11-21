@@ -48,3 +48,89 @@ it('uses conventional separated top-down starts for the reviewed guides',()=>{
  expect(paths.P).toHaveLength(2); expect(paths.R).toHaveLength(3);
  expect(paths.M).toHaveLength(4); expect(paths.N).toHaveLength(3); expect(paths.n).toHaveLength(2);
 });
+
+describe('v1.3 level progression', () => {
+ it('offers ten multi-exercise levels per section and unlocks only validated completions', async () => {
+  const g = await import('../lib/game');
+  for (const section of ['name','alphabet','numbers'] as const) {
+   expect(g.levelExercises(section, 1, 'Enrique', 'upper').length).toBeGreaterThan(1);
+   expect(g.levelExercises(section, 10, 'Enrique', 'upper').length).toBeGreaterThan(1);
+   let p=g.initial();
+   expect(g.levelUnlocked(p,section)).toBe(1);
+   p=g.completeLevel(p,section,1);
+   expect(g.levelUnlocked(p,section)).toBe(2);
+   expect(g.mansionStage(p)).toBe(1);
+   expect(g.mansionStage(g.completeLevel(p,section,1))).toBe(1);
+  }
+ });
+ it('migrates legacy worlds without awarding new levels', async () => {
+  const g=await import('../lib/game');
+  const p=g.load({getItem:()=>JSON.stringify({unlocked:5,completed:[1,2,3,4],history:[],settings:{}})});
+  expect(p.completed).toEqual([1,2,3,4]);
+  expect(g.levelUnlocked(p,'name')).toBe(5);
+  expect(g.levelUnlocked(p,'alphabet')).toBe(1);
+  expect(g.mansionStage(p)).toBe(4);
+ });
+ it('accepts a wobbly beginner trace but rejects taps and random strokes', async () => {
+  const g=await import('../lib/game');
+  const wobble=g.paths.L.map(s=>s.map(p=>({x:p.x+13,y:p.y+2})));
+  expect(g.evaluate(wobble,'L','normal',1,true).passed).toBe(true);
+  expect(g.evaluate(wobble,'L','normal',1).passed).toBe(false);
+  expect(g.evaluate([[{x:30,y:18}]],'L','normal',1,true).passed).toBe(false);
+  expect(g.evaluate([[{x:0,y:0},{x:95,y:95}]],'L','normal',1,true).passed).toBe(false);
+ });
+});
+
+it('unlocks all thirty levels sequentially without replay growth', async () => {
+ const g=await import('../lib/game');
+ let p=g.initial();
+ for (const section of ['name','alphabet','numbers'] as const) {
+  for(let level=1;level<=10;level++) {
+   expect(g.levelUnlocked(p,section)).toBe(level);
+   p=g.completeLevel(p,section,level);
+   const count=g.mansionStage(p);
+   p=g.completeLevel(p,section,level);
+   expect(g.mansionStage(p)).toBe(count);
+  }
+ }
+ expect(g.mansionStage(p)).toBe(30);
+ const restored=g.load({getItem:()=>JSON.stringify(p)});
+ expect(g.mansionStage(restored)).toBe(30);
+});
+
+it('unlocks the sixth name world for a legacy completed dragon', async () => {
+ const g=await import('../lib/game');
+ const p=g.load({getItem:()=>JSON.stringify({unlocked:5,completed:[1,2,3,4,5],history:[{world:5,exercise:'E',method:'guided',date:'2020-01-01'}],settings:{}})});
+ expect(g.levelUnlocked(p,'name')).toBe(6);
+ expect(p.history).toHaveLength(1);
+ expect(p.levels.name).toEqual([]);
+});
+
+it('beginner tolerance still requires all strokes in order', async () => {
+ const g=await import('../lib/game');
+ expect(g.evaluate(g.paths.A,'A','normal',1,true).passed).toBe(true);
+ expect(g.evaluate([g.paths.A[0]],'A','normal',1,true).passed).toBe(false);
+ expect(g.evaluate([...g.paths.A].reverse(),'A','normal',1,true).passed).toBe(false);
+});
+
+it('covers each language alphabet in level tasks in both cases without granting progress', async()=>{
+ const g=await import('../lib/game');
+ for(const language of ['en','es'] as const) for(const mode of ['upper','lower'] as const){
+  const expected=language==='es'?'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ':'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const tasks=Array.from({length:10},(_,i)=>g.levelExercises('alphabet',i+1,'Enrique',mode,language)).flat();
+  expect(new Set(tasks)).toEqual(new Set(Array.from(mode==='lower'?expected.toLowerCase():expected)));
+ }
+ expect(g.mansionStage(g.initial())).toBe(0);
+});
+
+it('migrates old history and records other sections without name progress', async()=>{
+ const g=await import('../lib/game');
+ const old={world:2,exercise:'n',method:'guided',date:'2020-01-01'};
+ let p=g.load({getItem:()=>JSON.stringify({unlocked:1,completed:[],history:[old]})});
+ expect(p.history).toEqual([{...old,section:'name'}]);
+ p=g.complete(p,1,'A','guided',true,'alphabet');
+ p=g.complete(p,1,'0','guided',true,'numbers');
+ expect(p.history.map(h=>h.section)).toEqual(['name','alphabet','numbers']);
+ expect(p.completed).toEqual([]); expect(p.unlocked).toBe(1);
+ expect(g.changeName(p,'Alex').history.map(h=>h.section)).toEqual(['alphabet','numbers']);
+});

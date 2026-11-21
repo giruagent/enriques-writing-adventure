@@ -5,3 +5,4 @@
 .glyph-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(64px,1fr)); gap:.6rem; }
 .glyph-grid button { min-height:64px; font-size:1.8rem; }
 .settings input[type="text"], .settings input:not([type]) { padding:.7rem; font-size:1.1rem; }
+.level-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px;margin:20px 0 35px}.level-grid small{display:block;margin-top:8px;font-size:.85rem}.tutorial{background:#fff0c8;border-radius:12px;padding:14px;margin:15px 0}.tutorial p{font-size:1rem;margin:8px 0}.tutorial button{padding:10px;margin:4px}.mansion{margin:0;background:#d8f3ed;text-align:center;min-width:0}.mansion svg{display:block;width:100%;max-height:360px}.mansion figcaption{padding:8px;font-weight:800}.direct{margin:12px 0;align-items:center}

@@ -59,7 +59,7 @@ test('export installs and reloads offline at its configured scope', async ({page
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([`${base}icon-192.png`, `${base}icon-512.png`]);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(async () => {
-    const cache = await caches.open('enrique-v1.2.1');
+    const cache = await caches.open('enrique-v1.3.0');
     const resources = [...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[src], link[rel=stylesheet]')].map(el => el instanceof HTMLScriptElement ? el.src : el.href).filter(url => url.includes('/_next/static/'));
     return resources.some(url => url.endsWith('.js')) && resources.some(url => url.endsWith('.css')) && (await Promise.all(resources.map(url => cache.match(url)))).every(Boolean);
   })).toBe(true);
@@ -185,7 +185,7 @@ test('name changes require confirmation and sections practice real guides', asyn
  await expect(page.getByRole('button',{name:/Diamond Trail/})).toBeEnabled();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ'); await page.getByRole('button',{name:'Lowercase'}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('abcdefghijklmnopqrstuvwxyz'); await page.getByRole('button',{name:'z',exact:true}).click(); await draw(page,paths.z); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toContainText('World complete');
  await page.getByRole('button',{name:'Back to map'}).click(); await page.getByRole('button',{name:'Numbers',exact:true}).click(); await page.getByRole('button',{name:'8',exact:true}).click(); await draw(page,paths['8']); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toBeVisible();
- await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.2.0/)).toBeVisible();
+ await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.3.0/)).toBeVisible();
 });
 
 test('all five worlds scale to a changed name and retain honest review', async ({page}) => {
@@ -279,4 +279,72 @@ test('a one-character name has a hidden exercise requiring adult review',async({
  await expect(page.locator('.exercise-copy h1')).toHaveText('?');
  await draw(page,[[{x:20,y:20},{x:60,y:60}]]);await page.getByRole('button',{name:'Ask a grown-up to check'}).click();await page.getByRole('button',{name:'Yes, this is ready!'}).click();
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).history[0].method)).toBe('adult');
+});
+
+test('sequential alphabet and numbers levels grow a persistent mansion only after real traces', async ({page})=>{
+ await page.addInitScript(()=>{if(!localStorage.getItem('enrique-adventure-v1'))localStorage.setItem('enrique-adventure-v1',JSON.stringify({name:'Al',unlocked:1,completed:[],history:[],settings:{music:false,speech:false}}))});
+ await page.goto('./');
+ for(const [section,characters] of [['Alphabet','ABC'],['Numbers','012']] as const){
+  await page.getByRole('button',{name:section,exact:true}).click();
+  await page.getByRole('button',{name:/^Level 1 /}).click();
+  await expect(page.getByText('How to draw')).toBeVisible();
+  await draw(page,[[{x:4,y:4},{x:95,y:95}]]);
+  await page.getByRole('button',{name:'Check my writing'}).click();
+  await expect(page.getByRole('status')).toContainText('Nice try');
+  await page.getByRole('button',{name:'Clear'}).click();
+  for(const character of characters){
+   await draw(page,paths[character]);
+   await page.getByRole('button',{name:'Check my writing'}).click();
+   await expect(page.getByRole('status')).toContainText(character===characters.at(-1)?'World complete':'Wonderful writing');
+   await page.getByRole('button',{name:'Continue'}).click();
+  }
+  await expect(page.getByRole('button',{name:/^Level 2 /})).toBeEnabled();
+ }
+ await expect(page.locator('.mansion figcaption')).toContainText('2 / 30');
+ await page.reload();
+ await expect(page.locator('.mansion figcaption')).toContainText('2 / 30');
+});
+
+test('Spanish first-level tutorial can be hidden and replayed without blocking drawing',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{language:'es',music:false,speech:false}})));
+ await page.goto('./');await page.getByRole('button',{name:'Números',exact:true}).click();
+ await page.getByRole('button',{name:/^Nivel 1 /}).click();
+ await expect(page.getByText(/Pon el dedo en el punto naranja/)).toBeVisible();
+ await page.getByRole('button',{name:'Ocultar pasos'}).click();
+ await expect(page.getByText(/Pon el dedo en el punto naranja/)).toBeHidden();
+ await page.getByRole('button',{name:'Escuchar los pasos'}).click();
+ await expect(page.getByText(/Pon el dedo en el punto naranja/)).toBeVisible();
+ await draw(page,paths['0']);await page.getByRole('button',{name:'Revisar mi escritura'}).click();
+ await expect(page.getByRole('status')).toContainText('¡Qué bien escribes!');
+});
+
+test('map counter and repeated name sequence track actual progress',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({name:'Al',unlocked:6,completed:[1,2,3,4,5],history:[],settings:{music:false,speech:false}})));
+ await page.goto('./');
+ await expect(page.locator('.section-heading .progress-pill')).toHaveText('★ 5 / 30');
+ await page.getByRole('button',{name:/Rainbow Letters/}).click();
+ await expect(page.locator('.letter-row')).toHaveText('AAl');
+ await expect(page.locator('.letter-row .current')).toHaveText('A');
+ await draw(page,paths.A); await page.getByRole('button',{name:'Check my writing'}).click(); await page.getByRole('button',{name:'Continue'}).click();
+ await expect(page.locator('.letter-row .current')).toHaveText('A');
+ await expect(page.locator('.letter-row .current')).toHaveCount(1);
+ await expect(page.locator('.letter-row span').nth(1)).toHaveClass('current');
+});
+
+test('alphabet and number exercises appear in parent history',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{music:false,speech:false}})));
+ await page.goto('./');
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click();
+ await page.getByRole('button',{name:/Level 1/}).first().click();
+ await draw(page,paths.A); await page.getByRole('button',{name:'Check my writing'}).click();
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).history.length)).toBe(1);
+ await page.getByRole('button',{name:/Back to map/}).click();
+ await page.getByRole('button',{name:'Numbers',exact:true}).click();
+ await page.getByRole('button',{name:/Level 1/}).first().click();
+ await draw(page,paths['0']); await page.getByRole('button',{name:'Check my writing'}).click();
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).history.length)).toBe(2);
+ const p=await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!));
+ expect(p.history.map((h:{section:string})=>h.section)).toEqual(['alphabet','numbers']); expect(p.completed).toEqual([]); expect(p.unlocked).toBe(1);
+ const parent=page.getByRole('button',{name:/Grown-ups: hold to open/}); await parent.dispatchEvent('pointerdown'); await page.waitForTimeout(2100); await parent.dispatchEvent('pointerup');
+ await expect(page.locator('.history')).toContainText('Alphabet'); await expect(page.locator('.history')).toContainText('Numbers');
 });

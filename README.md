@@ -48,3 +48,11 @@ The visible version is v1.2.0. To receive an update, connect to the internet, cl
 Music uses an on-device synthesized signal and begins after a user gesture. The Sound button mutes both voice and music; music and speech can also be controlled separately in the grown-up corner. Music pauses during speech. If playback cannot start, check device volume and silent mode, then tap Sound again. Device and browser restrictions can still prevent audio or speech.
 
 The guides use one selected print-letter formation; handwriting curricula and individual letter forms vary. E, F, P, R, M, N and n use separate strokes beginning at the top, but the guides have not received a pedagogical professional review and are not a substitute for a teacher’s guidance.
+
+## Version 1.3.0
+
+Each section now has ten sequential levels. Alphabet and Numbers also retain their free-practice character pickers; free practice does not build the mansion. Alphabet levels use the selected uppercase or lowercase mode. Name Adventure keeps the original five worlds and adds five guided name-writing worlds. Adult controls can open any level directly. Each completed level contributes once to the mansion, even when replayed; its illustrated progress is saved locally. Independent name exercises still require an adult's explicit review.
+
+The first level in each section includes replayable English and Spanish visual and spoken drawing instructions and a more forgiving tracing check. Follow the numbered orange starts in order, lift between strokes, and use Check or Clear to retry. Other levels retain the existing geometric checks. These checks are practice aids, not handwriting recognition.
+
+Existing v1.2 saves remain under the same local storage key. Completed name worlds and history are retained; completing the original fifth world unlocks the sixth. New Alphabet and Numbers levels start uncompleted. No backup or server copy exists, so clearing browser storage still removes local data. The v1.3.0 service worker installs a new cache while retaining old caches for open pages, and the existing close/reopen refresh instructions still apply.
