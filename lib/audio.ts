@@ -74,3 +74,14 @@ export class GameAudio {
  hide() { this.stopMusic(); this.stopSpeech(); }
  dispose() { this.hide(); if (this.context) void this.context.close().catch(() => {}); this.context = null; this.gain = null; }
 }
+
+// Explicit names avoid relying on how a voice reads an isolated letter.
+const letterNames = {
+ en: ['ay','bee','see','dee','ee','eff','jee','aitch','eye','jay','kay','ell','em','en','oh','pee','cue','ar','ess','tee','you','vee','double you','ex','why','zee'],
+ es: ['a','be','ce','de','e','efe','ge','hache','i','jota','ka','ele','eme','ene','eñe','o','pe','cu','erre','ese','te','u','uve','uve doble','equis','ye','zeta'],
+};
+export function letterName(character: string, language: 'en' | 'es'): string | undefined {
+ const alphabet = language === 'es' ? 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+ const index = alphabet.indexOf(character.toUpperCase());
+ return character.length === 1 && index >= 0 ? letterNames[language][index] : undefined;
+}

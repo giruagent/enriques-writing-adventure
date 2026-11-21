@@ -59,7 +59,7 @@ test('export installs and reloads offline at its configured scope', async ({page
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([`${base}icon-192.png`, `${base}icon-512.png`]);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(async () => {
-    const cache = await caches.open('enrique-v1.3.0');
+    const cache = await caches.open('enrique-v1.4.0-dragon-1');
     const resources = [...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[src], link[rel=stylesheet]')].map(el => el instanceof HTMLScriptElement ? el.src : el.href).filter(url => url.includes('/_next/static/'));
     return resources.some(url => url.endsWith('.js')) && resources.some(url => url.endsWith('.css')) && (await Promise.all(resources.map(url => cache.match(url)))).every(Boolean);
   })).toBe(true);
@@ -83,7 +83,7 @@ test('adult review and direct access', async ({page}) => {
   await page.getByRole('button',{name:'Ask a grown-up to check'}).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button',{name:'Yes, this is ready!'}).click();
-  await expect(page.getByText('World complete!')).toBeVisible();
+  await expect(page.getByText('Amazing! Level complete!')).toBeVisible();
 });
 
 test('hidden letter keeps context without revealing the answer', async ({page}) => {
@@ -183,9 +183,9 @@ test('name changes require confirmation and sections practice real guides', asyn
  await expect(page.locator('.exercise-copy h1')).toHaveText('a'); await draw(page,paths.a); await page.getByRole('button',{name:'Check my writing'}).click(); await page.getByRole('button',{name:'Continue'}).click();
  await expect(page.locator('.exercise-copy h1')).toHaveText('l'); await draw(page,paths.l); await page.getByRole('button',{name:'Check my writing'}).click(); await page.getByRole('button',{name:'Continue'}).click();
  await expect(page.getByRole('button',{name:/Diamond Trail/})).toBeEnabled();
- await page.getByRole('button',{name:'Alphabet',exact:true}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ'); await page.getByRole('button',{name:'Lowercase'}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('abcdefghijklmnopqrstuvwxyz'); await page.getByRole('button',{name:'z',exact:true}).click(); await draw(page,paths.z); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toContainText('World complete');
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ'); await page.getByRole('button',{name:'Lowercase'}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('abcdefghijklmnopqrstuvwxyz'); await page.getByRole('button',{name:'z',exact:true}).click(); await draw(page,paths.z); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toContainText('Wonderful writing');
  await page.getByRole('button',{name:'Back to map'}).click(); await page.getByRole('button',{name:'Numbers',exact:true}).click(); await page.getByRole('button',{name:'8',exact:true}).click(); await draw(page,paths['8']); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toBeVisible();
- await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.3.0/)).toBeVisible();
+ await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.4.0/)).toBeVisible();
 });
 
 test('all five worlds scale to a changed name and retain honest review', async ({page}) => {
@@ -295,7 +295,7 @@ test('sequential alphabet and numbers levels grow a persistent mansion only afte
   for(const character of characters){
    await draw(page,paths[character]);
    await page.getByRole('button',{name:'Check my writing'}).click();
-   await expect(page.getByRole('status')).toContainText(character===characters.at(-1)?'World complete':'Wonderful writing');
+   await expect(page.getByRole('status')).toContainText(character===characters.at(-1)?'Amazing! Level complete!':'Wonderful writing');
    await page.getByRole('button',{name:'Continue'}).click();
   }
   await expect(page.getByRole('button',{name:/^Level 2 /})).toBeEnabled();
@@ -347,4 +347,94 @@ test('alphabet and number exercises appear in parent history',async({page})=>{
  expect(p.history.map((h:{section:string})=>h.section)).toEqual(['alphabet','numbers']); expect(p.completed).toEqual([]); expect(p.unlocked).toBe(1);
  const parent=page.getByRole('button',{name:/Grown-ups: hold to open/}); await parent.dispatchEvent('pointerdown'); await page.waitForTimeout(2100); await parent.dispatchEvent('pointerup');
  await expect(page.locator('.history')).toContainText('Alphabet'); await expect(page.locator('.history')).toContainText('Numbers');
+});
+
+test('alphabet letter replay uses the current language and respects mute', async ({page})=>{
+ await page.addInitScript(()=>{localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{language:'es',music:false,speech:true}}));const w=window as typeof window & {replayed:string[]};w.replayed=[];Object.defineProperty(window,'speechSynthesis',{value:{speak:(u:SpeechSynthesisUtterance)=>w.replayed.push(u.lang+':'+u.text),cancel:()=>{}}})});
+ await page.goto('./');await page.getByRole('button',{name:'Abecedario',exact:true}).click();await page.getByRole('button',{name:'Ñ',exact:true}).click();
+ const replay=page.getByRole('button',{name:'Escuchar letra: Ñ'});await replay.click();await replay.click();
+ expect((await page.evaluate(()=>(window as typeof window & {replayed:string[]}).replayed)).slice(-2)).toEqual(['es-ES:eñe','es-ES:eñe']);
+ await page.getByRole('button',{name:'Sonido',exact:true}).click();const count=await page.evaluate(()=>(window as typeof window & {replayed:string[]}).replayed.length);await replay.click();expect(await page.evaluate(()=>(window as typeof window & {replayed:string[]}).replayed.length)).toBe(count);
+});
+
+test('dragon stages, real completion, replay, speech and offline persistence',async({page,context,baseURL})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.addInitScript(()=>{const w=window as typeof window & {spoken:string[]};w.spoken=[];Object.defineProperty(window,'speechSynthesis',{value:{speak:(u:SpeechSynthesisUtterance)=>w.spoken.push(u.text),cancel:()=>{}}})});
+ await page.goto('./'); await page.evaluate(()=>navigator.serviceWorker.ready);
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click();
+ await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 0 / 10');
+ await expect(page.locator('.dragon-picture img')).toHaveCount(0);
+ for(let replay=0;replay<2;replay++){
+  await page.getByRole('button',{name:/^Level 1 /}).click();
+  for(const [i,c] of [...'ABC'].entries()){
+   await draw(page,paths[c]); await page.getByRole('button',{name:'Check my writing'}).click();
+   if(i<2) await expect(page.locator('.celebration')).toHaveCount(0);
+   else {await expect(page.locator('.celebration')).toContainText('¡Increíble!');await expect(page.locator('.celebration button')).toBeVisible();expect(await page.locator('.celebration').evaluate(e=>getComputedStyle(e).animationName)).toBe('none');await expect.poll(()=>page.evaluate(()=>(window as typeof window & {spoken:string[]}).spoken.some(s=>s.includes('Amazing! Level complete!')))).toBe(true)}
+   await page.getByRole('button',{name:'Continue'}).click();
+  }
+  await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 1 / 10');
+  await expect(page.locator('.dragon-picture img')).toHaveAttribute('src',/stage-1\.png$/);
+ }
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).levels.alphabet)).toEqual([1]);
+ const base=new URL(baseURL!).pathname;
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.4.0-dragon-1');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
+ await context.setOffline(true);await page.reload();await page.getByRole('button',{name:'Alphabet',exact:true}).click();
+ await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 1 / 10');
+ await expect.poll(()=>page.locator('.dragon-picture img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBeGreaterThan(0);
+});
+
+test('completed alphabet shows final dragon while other sections keep mansion',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{name:[],alphabet:[1,2,3,4,5,6,7,8,9,10],numbers:[]}})));
+ await page.goto('./');await expect(page.locator('.mansion')).toBeVisible();
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click();await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 10 / 10');await expect(page.locator('.dragon-picture img')).toHaveAttribute('src',/stage-10\.png$/);await expect(page.locator('.mansion')).toHaveCount(0);
+ await page.getByRole('button',{name:'Numbers',exact:true}).click();await expect(page.locator('.mansion')).toBeVisible();await expect(page.locator('.dragon-progress')).toHaveCount(0);
+});
+
+test('guided fallback requires a real drawing, arithmetic gate and explicit adult approval', async ({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{alphabet:[],name:[],numbers:[]},settings:{music:false,speech:false}})));
+ await page.goto('./'); await page.getByRole('button',{name:'Alphabet',exact:true}).click(); await page.getByRole('button',{name:/^Level 1 /}).click();
+ const check=page.getByRole('button',{name:'Check my writing'}), fallback=page.getByRole('button',{name:'Ask a grown-up to review'});
+ await check.click(); await expect(fallback).toHaveCount(0);
+ await draw(page,[[{x:30,y:30}]]); await check.click(); await expect(fallback).toHaveCount(0);
+ await page.getByRole('button',{name:'Clear'}).click(); await draw(page,[[{x:20,y:20},{x:70,y:70}]]); await check.click();
+ await expect(fallback).toBeVisible(); await fallback.click(); await page.getByRole('button',{name:'6',exact:true}).click();
+ await expect(page.getByText('Try again.',{exact:true})).toBeVisible(); await expect(page.getByRole('button',{name:'Yes, this is ready!'})).toHaveCount(0);
+ await page.getByRole('button',{name:'7',exact:true}).click(); await expect(page.getByRole('dialog',{name:'Grown-up review'})).toBeVisible();
+ await expect(page.locator('svg.pad > path[stroke="#253b75"]')).toHaveCount(1); await expect(page.getByText(/does not recognize/i)).toBeVisible();
+ await page.getByRole('button',{name:'Let’s try again'}).click(); await expect(fallback).toBeVisible();
+ await fallback.click(); await page.getByRole('button',{name:'7',exact:true}).click(); await page.getByRole('button',{name:'Yes, this is ready!'}).evaluate((button: HTMLButtonElement)=>{button.click();button.click()});
+ await expect(page.getByRole('status')).toContainText('Wonderful writing');
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).history.length)).toBe(1);
+ const history=await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).history); expect(history[0]).toMatchObject({section:'alphabet',world:1,exercise:'A',method:'adult'});
+ await page.getByRole('button',{name:'Continue'}).click();
+ for(const c of ['B','C']){await draw(page,paths[c]);await check.click();await page.getByRole('button',{name:'Continue'}).click()}
+ const p=await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!));expect(p.levels.alphabet).toEqual([1]);expect(p.history).toHaveLength(3);
+});
+
+test('level 10 adult review celebrates once and replay keeps dragon growth', async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{alphabet:[1,2,3,4,5,6,7,8,9],name:[],numbers:[]},settings:{music:false,speech:false}})));
+ await page.goto('./');await page.getByRole('button',{name:'Alphabet',exact:true}).click();
+ for(let run=0;run<2;run++){
+  await page.getByRole('button',{name:/^Level 10 /}).click();
+  for(const c of ['A','B']){await draw(page,paths[c]);await page.getByRole('button',{name:'Check my writing'}).click();await page.getByRole('button',{name:'Continue'}).click()}
+  await draw(page,[[{x:20,y:20},{x:70,y:70}]]);await page.getByRole('button',{name:'Check my writing'}).click();await page.getByRole('button',{name:'Ask a grown-up to review'}).click();await page.getByRole('button',{name:'7',exact:true}).click();await page.getByRole('button',{name:'Yes, this is ready!'}).click();
+  await expect(page.locator('.celebration')).toContainText('Amazing! Level complete!');await page.getByRole('button',{name:'Continue'}).click();
+  await expect(page.locator('.dragon-picture img')).toHaveAttribute('src',/stage-10\.png$/);
+ }
+ const p=await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!));expect(p.levels.alphabet).toEqual([1,2,3,4,5,6,7,8,9,10]);expect(p.history).toHaveLength(6);expect(p.history.filter((h:{method:string})=>h.method==='adult')).toHaveLength(2);
+});
+
+test('Spanish guided review explains the adult decision',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{language:'es',music:false,speech:false}})));
+ await page.goto('./');await page.getByRole('button',{name:'Números',exact:true}).click();await page.getByRole('button',{name:/^Nivel 1 /}).click();
+ await draw(page,[[{x:15,y:15},{x:80,y:80}]]);await page.getByRole('button',{name:'Revisar mi escritura'}).click();await page.getByRole('button',{name:'Pide a un adulto que revise'}).click();await page.getByRole('button',{name:'7',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'Revisión de un adulto'})).toContainText('La aplicación no reconoce esta escritura');
+ await page.getByRole('button',{name:'¡Sí, está listo!'}).click();await expect(page.getByRole('status')).toContainText('¡Qué bien escribes!');
+});
+
+test('all ten dragon stage images decode while offline',async({page,context,baseURL})=>{
+ await page.goto('./');await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await context.setOffline(true);
+ const base=new URL(baseURL!).pathname;
+ const sizes=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth);img.onerror=()=>reject(new Error(`stage ${i+1} unavailable offline`));img.src=`${base}dragon/stage-${i+1}.png`}))),base);
+ expect(sizes).toHaveLength(10);expect(sizes.every(size=>size>0)).toBe(true);
 });

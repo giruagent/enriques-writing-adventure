@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {GameAudio} from '../lib/audio';
+import {GameAudio, letterName} from '../lib/audio';
 
 let starts: ReturnType<typeof vi.fn>, resumes: ReturnType<typeof vi.fn>, suspends: ReturnType<typeof vi.fn>, closes: ReturnType<typeof vi.fn>, speaks: ReturnType<typeof vi.fn>, cancels: ReturnType<typeof vi.fn>;
 beforeEach(()=>{
@@ -27,4 +27,9 @@ it('resumes an interrupted context synchronously and reports failures',async()=>
 it('makes the legacy default volume audible without changing its saved value',()=>{
  const gains:{value:number}[]=[];class Context {state='running';currentTime=0;destination={};createGain(){const g={value:0,setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn(),exponentialRampToValueAtTime:vi.fn()};gains.push(g);return {gain:g,connect:vi.fn(),disconnect:vi.fn()}}createOscillator(){return {type:'',frequency:{value:0},connect:vi.fn(),start:vi.fn(),stop:vi.fn()}}}
  vi.stubGlobal('window',{AudioContext:Context});const a=new GameAudio();a.configure(true,.25,false,true);a.gesture();expect(gains[0].value * .5).toBeCloseTo(.1);
+});
+
+it('uses explicit language-specific names for every letter and both cases',()=>{
+ for(const [language,alphabet] of [['en','ABCDEFGHIJKLMNOPQRSTUVWXYZ'],['es','ABCDEFGHIJKLMNÑOPQRSTUVWXYZ']] as const) for(const c of alphabet) {expect(letterName(c,language)).toBeTruthy();expect(letterName(c.toLowerCase(),language)).toBe(letterName(c,language));}
+ expect(letterName('W','en')).toBe('double you');expect(letterName('w','es')).toBe('uve doble');expect(letterName('ñ','es')).toBe('eñe');expect(letterName('Ñ','en')).toBeUndefined();
 });

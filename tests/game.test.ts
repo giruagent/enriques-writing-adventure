@@ -73,7 +73,7 @@ describe('v1.3 level progression', () => {
  });
  it('accepts a wobbly beginner trace but rejects taps and random strokes', async () => {
   const g=await import('../lib/game');
-  const wobble=g.paths.L.map(s=>s.map(p=>({x:p.x+13,y:p.y+2})));
+  const wobble=g.paths.L.map(s=>s.map(p=>({x:p.x+18,y:p.y+2})));
   expect(g.evaluate(wobble,'L','normal',1,true).passed).toBe(true);
   expect(g.evaluate(wobble,'L','normal',1).passed).toBe(false);
   expect(g.evaluate([[{x:30,y:18}]],'L','normal',1,true).passed).toBe(false);
@@ -133,4 +133,40 @@ it('migrates old history and records other sections without name progress', asyn
  expect(p.history.map(h=>h.section)).toEqual(['name','alphabet','numbers']);
  expect(p.completed).toEqual([]); expect(p.unlocked).toBe(1);
  expect(g.changeName(p,'Alex').history.map(h=>h.section)).toEqual(['alphabet','numbers']);
+});
+
+describe('forgiving guided practice',()=>{
+ it('accepts realistic offsets at each difficulty while keeping the first level easier',()=>{
+  for(const [difficulty,offset] of [['easy',16],['normal',12],['challenge',9]] as const){
+   const trace=paths.A.map((stroke,i)=>stroke.map((p,j)=>({x:p.x+offset+(j%2),y:p.y+(i?1:-1)})));
+   expect(evaluate(trace,'A',difficulty).passed,difficulty).toBe(true);
+  }
+  const beginner=paths.A.map(s=>s.map(p=>({x:p.x+18,y:p.y})));
+  expect(evaluate(beginner,'A','normal',1,true).passed).toBe(true);
+  expect(evaluate(beginner,'A','normal').passed).toBe(false);
+ });
+ it('rejects taps, arbitrary lines and missing strokes at every difficulty',()=>{
+  for(const difficulty of ['easy','normal','challenge'] as const) for(const beginner of [false,true]){
+   expect(evaluate([[{x:25,y:78}]],'A',difficulty,1,beginner).passed).toBe(false);
+   expect(evaluate([[{x:0,y:0},{x:100,y:100}]],'A',difficulty,1,beginner).passed).toBe(false);
+   expect(evaluate([paths.A[0]],'A',difficulty,1,beginner).passed).toBe(false);
+  }
+ });
+});
+
+describe('alphabet dragon progression',()=>{
+ it('uses only unique alphabet level completions and survives legacy saves and reloads',async()=>{
+  const g=await import('../lib/game');
+  let p=g.load({getItem:()=>JSON.stringify({unlocked:5,completed:[1,2,3,4],history:[]})});
+  expect(g.dragonStage(p)).toBe(0);
+  p=g.completeLevel(p,'numbers',1); expect(g.dragonStage(p)).toBe(0);
+  p=g.complete(p,1,'A','guided',true,'alphabet',true); expect(g.dragonStage(p)).toBe(0);
+  for(let i=1;i<=10;i++){p=g.completeLevel(p,'alphabet',i);p=g.completeLevel(p,'alphabet',i);expect(g.dragonStage(p)).toBe(i)}
+  expect(g.dragonStage(g.load({getItem:()=>JSON.stringify(p)}))).toBe(10);
+ });
+ it('scales all supplied crop rectangles into the actual image without exceeding bounds',async()=>{
+  const {dragonCrops}=await import('../lib/dragon');
+  expect(dragonCrops).toHaveLength(10);
+  for(const [i,c] of dragonCrops.entries()) {expect(c.stage).toBe(i+1);expect(c.x).toBeGreaterThanOrEqual(0);expect(c.y).toBeGreaterThanOrEqual(0);expect(c.x+c.width).toBeLessThanOrEqual(1280);expect(c.y+c.height).toBeLessThanOrEqual(511);expect(c.width).toBeGreaterThan(0);expect(c.height).toBeGreaterThan(0)}
+ });
 });

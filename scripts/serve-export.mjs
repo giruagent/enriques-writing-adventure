@@ -13,4 +13,4 @@ createServer(async (req, res) => {
   if (!file.startsWith(root + sep)) {res.writeHead(403).end(); return;}
   try {const data = await readFile(file); res.writeHead(200, {'Content-Type': types[extname(file)] || 'application/octet-stream'}).end(data);}
   catch {res.writeHead(404).end();}
-}).listen(4173, '127.0.0.1');
+}).listen(Number(process.env.PORT || 4173), '127.0.0.1');
