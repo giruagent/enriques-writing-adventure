@@ -1,4 +1,4 @@
-const CACHE = 'enrique-v3';
+const CACHE = 'enrique-v4';
 const base = new URL(self.registration.scope).pathname;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

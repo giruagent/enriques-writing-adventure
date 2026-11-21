@@ -32,3 +32,9 @@ The service worker caches the loaded static app and same-origin static resources
 ## Physical device checks
 
 Not verified on a physical iPad or Apple Pencil in this environment. On iPad Safari, test finger and Pencil input, multi-stroke writing, palm rejection, orientation changes during and after drawing, undo/clear, the long-press gate, sound after a gesture, Spanish speech availability, add to Home Screen, then reload online and test offline after installation. Browser speech voices and Pencil/palm behavior depend on the device. The geometric evaluator uses tolerant stroke order, direction, continuity, coverage, and proximity checks, but cannot guarantee a correctly formed letter or reliably assess the direction of very short strokes; adult involvement remains useful.
+
+## Music and voice
+
+The Sound button in the header mutes all game audio. The grown-up corner has separate background music and spoken feedback switches and a music volume slider; these preferences are saved alongside existing progress. Music defaults to a quiet level and is an original synthesized melody generated on the device, without an audio download. Spoken feedback defaults off; turn it on in the grown-up corner. It provides encouragement, hints, review prompts and victory feedback as well as the instruction button. Repeated or overlapping speech is suppressed.
+
+Music begins only after a tap or key press and pauses when the page is hidden. After returning, tap again to resume. iPad Safari may also require a fresh gesture after an interruption or setting change. Voice uses the device's Web Speech voices: speech may be unavailable, may require a user gesture, and may not work offline even when the game and synthesized music do. The visible feedback remains available without speech. Offline use still requires the initial service-worker installation described above; verify audio on the actual iPad and with its silent mode and volume settings.

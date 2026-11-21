@@ -59,7 +59,7 @@ test('export installs and reloads offline at its configured scope', async ({page
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([`${base}icon-192.png`, `${base}icon-512.png`]);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(async () => {
-    const cache = await caches.open('enrique-v3');
+    const cache = await caches.open('enrique-v4');
     const resources = [...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[src], link[rel=stylesheet]')].map(el => el instanceof HTMLScriptElement ? el.src : el.href).filter(url => url.includes('/_next/static/'));
     return resources.some(url => url.endsWith('.js')) && resources.some(url => url.endsWith('.css')) && (await Promise.all(resources.map(url => cache.match(url)))).every(Boolean);
   })).toBe(true);
@@ -118,4 +118,54 @@ test('pointer fallback, endpoint and cancellation preserve only finished strokes
  await expect(strokes).toHaveCount(1);
  const d=await strokes.first().getAttribute('d');
  expect(d).toMatch(/30(?:\.\d+)? 30/); expect(d).toMatch(/50(?:\.\d+)? 50/);
+});
+
+test('audio settings migrate, invoke playback and voice, and mute persists with progress', async ({page}) => {
+ await page.addInitScript(() => {
+  localStorage.setItem('enrique-adventure-v1', JSON.stringify({unlocked:2,completed:[1],history:[],sessions:4,settings:{language:'es',speech:true,mute:false}}));
+  const w=window as typeof window & {audioEvents:string[]}; w.audioEvents=[];
+  class FakeAudio {
+   state='running'; currentTime=0; destination={};
+   createGain(){return {gain:{value:0,setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}}}
+   createOscillator(){return {type:'',frequency:{value:0},connect(){},disconnect(){},start(){w.audioEvents.push('start')},stop(){},onended:null}}
+   resume(){w.audioEvents.push('resume');return Promise.resolve()} suspend(){w.audioEvents.push('suspend');return Promise.resolve()} close(){return Promise.resolve()}
+  }
+  Object.defineProperty(window,'AudioContext',{value:FakeAudio});
+  Object.defineProperty(window,'speechSynthesis',{value:{speak:(u:SpeechSynthesisUtterance)=>w.audioEvents.push('speak:'+u.lang+':'+u.text),cancel:()=>w.audioEvents.push('cancel')}});
+ });
+ await page.goto('./');
+ await expect(page.getByRole('button',{name:/Camino de diamantes/})).toBeEnabled();
+ await page.getByRole('button',{name:/Pradera de letras/}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as typeof window & {audioEvents:string[]}).audioEvents)).toContain('start');
+ await page.getByRole('button',{name:'Revisar mi escritura'}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as typeof window & {audioEvents:string[]}).audioEvents.some(e=>e.startsWith('speak:es-ES:')))).toBe(true);
+ await page.getByRole('button',{name:'Sonido',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as typeof window & {audioEvents:string[]}).audioEvents)).toContain('suspend');
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).settings.mute)).toBe(true);
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!));
+ expect(saved.completed).toEqual([1]); expect(saved.unlocked).toBe(2); expect(saved.settings.musicVolume).toBe(.25);
+});
+
+test('spoken feedback follows review, success and victory', async ({page}) => {
+ await page.addInitScript(() => {
+  localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:5,completed:[1,2,3,4],history:[],settings:{speech:true,music:false}}));
+  const w=window as typeof window & {spoken:string[]}; w.spoken=[];
+  Object.defineProperty(window,'speechSynthesis',{value:{speak:(u:SpeechSynthesisUtterance)=>{w.spoken.push(u.text);setTimeout(()=>u.onend?.({} as SpeechSynthesisEvent),0)},cancel:()=>{}}});
+ });
+ await page.goto('./');
+ await page.getByRole('button',{name:/Scribble Dragon/}).click();
+ for(const letter of ['E','n','r','i','q','u','e']) {
+  await draw(page,paths[letter]);
+  await page.getByRole('button',{name:'Check my writing'}).click();
+  await expect(page.getByRole('status')).toBeVisible();
+  await page.getByRole('button',{name:'Continue'}).click();
+ }
+ await draw(page,[[{x:20,y:20},{x:60,y:60}]]);
+ await page.getByRole('button',{name:'Ask a grown-up to check'}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as typeof window & {spoken:string[]}).spoken)).toContain('Look at the writing together. Is this a good attempt at the requested letter or name?');
+ await page.waitForTimeout(30);
+ await page.getByRole('button',{name:'Yes, this is ready!'}).click();
+ await page.waitForTimeout(30);
+ await page.getByRole('button',{name:'Continue'}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as typeof window & {spoken:string[]}).spoken.some(s=>s.includes('Your writing adventure made')))).toBe(true);
 });
