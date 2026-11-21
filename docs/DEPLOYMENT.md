@@ -121,6 +121,10 @@ images). `npm run test:e2e` does this automatically on port 4173.
 ## History note
 
 Until v1.7.0 the site was published by committing the export to a `gh-pages` branch
-(`deploy: version X.Y.Z` commits) and letting Pages serve that branch. That branch is
-kept only as an archive of previous builds. New deployments must go through the
-workflow so the build is reproducible from source.
+(`deploy: version X.Y.Z` commits) and letting Pages serve that branch. That branch has
+been deleted: it duplicated the build output and invited edits to generated files. The
+only publishing path is now the workflow, which builds from source.
+
+Do not recreate a publish branch. If an earlier version has to be served again, revert
+the offending commit on `main` and let the workflow rebuild it, so the deployed files
+always correspond to a commit in the repository history.
