@@ -1,4 +1,4 @@
-const CACHE = 'enrique-v4';
+const CACHE = 'enrique-v1.2.1';
 const base = new URL(self.registration.scope).pathname;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -16,17 +16,15 @@ self.addEventListener('install', event => {
     await cache.addAll([...new Set(assets), `${base}manifest.webmanifest`, `${base}icon-192.png`, `${base}icon-512.png`]);
   })());
 });
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('enrique-') && key !== CACHE).map(key => caches.delete(key)))));
-});
+// Keep older caches: an open page may still need its version's hashed assets.
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== location.origin || !url.pathname.startsWith(base) || url.pathname.startsWith(`${base}api/`)) return;
   event.respondWith(fetch(event.request).then(async response => {
-    if (response.ok) await (await caches.open(CACHE)).put(event.request, response.clone());
+    if (response.ok && event.request.mode !== 'navigate') await (await caches.open(CACHE)).put(event.request, response.clone());
     return response;
   }).catch(async () => {
-    const cached = await caches.match(event.request);
+    const cached = await (await caches.open(CACHE)).match(event.request);
     if (cached) return cached;
     throw new Error('Offline resource unavailable');
   }));

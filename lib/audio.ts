@@ -5,36 +5,35 @@ export class GameAudio {
  private timer: ReturnType<typeof setInterval> | null = null;
  private nodes = new Set<OscillatorNode>();
  private index = 0;
- private lastSpeech = '';
- private lastSpeechAt = 0;
  private speaking = false;
  private generation = 0;
  private enabled = false;
  private volume = .25;
+ constructor(private onFailure: () => void = () => {}) {}
 
  configure(music: boolean, volume: number, muted: boolean, voice: boolean) {
   this.enabled = music && !muted;
   this.volume = volume;
-  if (this.gain && this.context) this.gain.gain.setValueAtTime(this.volume * .12, this.context.currentTime);
+  if (this.gain && this.context) this.gain.gain.setValueAtTime(this.volume * .8, this.context.currentTime);
   if (!this.enabled) this.stopMusic();
   if (muted || !voice) this.stopSpeech();
  }
  gesture() {
-  if (!this.enabled || document.hidden) return;
+  if (!this.enabled || document.hidden || this.speaking) return;
   try {
    const Audio = window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
-   if (!Audio) return;
+   if (!Audio) { this.onFailure(); return; }
    if (!this.context) {
     this.context = new Audio();
     this.gain = this.context.createGain();
-    this.gain.gain.value = this.volume * .12;
+    this.gain.gain.value = this.volume * .8;
     this.gain.connect(this.context.destination);
    }
-   if (this.context.state === 'suspended') void this.context.resume().catch(() => {});
+   if ((this.context.state as string) === 'suspended' || (this.context.state as string) === 'interrupted') void this.context.resume().then(() => { if (this.context?.state !== 'running') this.onFailure(); }).catch(() => this.onFailure());
    if (this.timer) return;
    this.note();
    this.timer = setInterval(() => this.note(), 650);
-  } catch { /* Audio is optional. */ }
+  } catch { this.onFailure(); }
  }
  private note() {
   const c = this.context;
@@ -52,15 +51,15 @@ export class GameAudio {
  }
  speak(text: string, language: 'en' | 'es', allowed: boolean) {
   if (!allowed || document.hidden || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
-  const now = Date.now();
-  if (this.speaking || (this.lastSpeech === text && now - this.lastSpeechAt < 8000)) return;
+  this.stopSpeech();
+  this.stopMusic();
   try {
    const utterance = new SpeechSynthesisUtterance(text);
    utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
    utterance.rate = .9;
    const generation = this.generation;
-   this.speaking = true; this.lastSpeech = text; this.lastSpeechAt = now;
-   utterance.onend = utterance.onerror = () => { if (generation === this.generation) this.speaking = false; };
+   this.speaking = true;
+   utterance.onend = utterance.onerror = () => { if (generation === this.generation) { this.speaking = false; this.gesture(); } };
    window.speechSynthesis.speak(utterance);
   } catch { this.speaking = false; }
  }
