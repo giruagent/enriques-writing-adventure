@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {describe,it,expect} from 'vitest';
 import {complete,evaluate,initial,load,paths,save} from '../lib/game';
 describe('writing geometry',()=>{it('accepts every reference trajectory',()=>{for(const [letter,path] of Object.entries(paths)) expect(evaluate(path,letter).passed,letter).toBe(true)});it('rejects taps and arbitrary lines',()=>{expect(evaluate([[{x:30,y:18}]],'E').passed).toBe(false);expect(evaluate([[{x:0,y:0},{x:100,y:100}]],'E').passed).toBe(false)});it('uses difficulty and tolerance',()=>{const shifted=paths.E.map(s=>s.map(p=>({x:p.x+12,y:p.y})));expect(evaluate(shifted,'E','easy').passed).toBe(true);expect(evaluate(shifted,'E','challenge',.7).passed).toBe(false)})});
@@ -184,4 +186,27 @@ describe('name house progression',()=>{
   for(let n=1;n<=10;n++) p=g.completeLevel(p,'name',n);
   expect(g.nameHouseStage(p)).toBe(10);
  });
+});
+
+describe('Numbers alien progression',()=>{
+ it('migrates legacy saves without inventing Numbers completions',async()=>{
+  const g=await import('../lib/game');
+  const p=load({getItem:()=>JSON.stringify({unlocked:6,completed:[1,2,3,4,5],history:[]})});
+  expect(g.alienStage(p)).toBe(0); expect(p.completed).toEqual([1,2,3,4,5]);
+ });
+ it('counts only distinct valid Numbers levels, preserving progress on replay and reload',async()=>{
+  const g=await import('../lib/game'); let p=initial();
+  p=g.completeLevel(g.completeLevel(p,'name',1),'alphabet',1); expect(g.alienStage(p)).toBe(0);
+  p=g.completeLevel(p,'numbers',1); expect(g.alienStage(p)).toBe(1);
+  p=g.completeLevel(p,'numbers',1); expect(p.levels.numbers).toEqual([1]);
+  for(let i=2;i<=10;i++) p=g.completeLevel(p,'numbers',i);
+  let value=''; save({setItem:(_,v)=>{value=v}},p); expect(g.alienStage(load({getItem:()=>value}))).toBe(10);
+  expect(g.alienStage(initial())).toBe(0);
+  expect(g.alienStage({...p,levels:{...p.levels,numbers:[1,1,2,0,11]}})).toBe(2);
+ });
+});
+
+it('keeps all ten supplied PNG files byte-for-byte intact',()=>{
+ const hashes=["a2f354628a684f872c4af0f952d14e320fa308222204f93cefcaaf61c79f2640", "00a9ca3b23a07029b0709f453a98d090f5c87bf18a563fd9707b9ad13995e66c", "b3b809fb356c3b26ed383376c6cf0937e63883851e4808b4734dbe0671c0c2f2", "e6faacc3dc95fe5ffa58d42e1e53f96b973508f83062e42b0ce87da5a0fad654", "3d0b29142d084aba9f0b39352eba3983e8cf30d5c59809cdb91393a3d36575c3", "8cf6aca3bef9bfc6e72ecf5d2bb9e0efab56e1a1a8192f2d375f31f75550a933", "94b512553ee77a13ded206f88490cdfaf9ef2fff85d404b45a3781c0c2ae3808", "d942a31238d4de3bea5a9897393768fb9fa7063ba9022e47609c4a299c3fea62", "d57796f90440f2e352fd9e9d73681897b4ca02becc5fc1bb48bdb99cf06c793e", "917d63f4febe7f386ef290e781da51ce68b84911ca40295b2e50e1be3ae643bf"];
+ hashes.forEach((hash,i)=>{const bytes=readFileSync(`public/alien/alien_stage_${String(i+1).padStart(2,"0")}.png`);expect(bytes.subarray(0,8)).toEqual(Buffer.from([137,80,78,71,13,10,26,10]));expect(createHash("sha256").update(bytes).digest("hex")).toBe(hash)});
 });

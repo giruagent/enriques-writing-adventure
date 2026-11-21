@@ -82,3 +82,10 @@ Name Adventure now grows the supplied ten-stage house artwork. Before the first 
 The ten individual 512 × 384 images are stored in `public/name-house/` and are precached for offline use when the new service worker installs. The worker retains older caches and waits for existing clients to close as before. Screen, section and level changes use a brief, non-blocking transition; reduced-motion preferences disable it. No audio autoplay behavior has changed.
 
 Guided exercises show the number of pen strokes, numbered start labels connected to the actual starting points, and arrowheads aligned with the authored path segments. Lift your finger between numbered strokes. The Watch how to write button replays the pen strokes in order without blocking the writing pad. With reduced motion, the demonstration appears fully drawn; use the numbered starts for the order. Guides and demonstrations do not change tracing validation or saved progress. Short strokes still have a direction, but their arrows can be close to the start; the replay provides another view. Labels and arrows use the same SVG coordinate space as the paths and resize with the pad.
+
+
+## Version 1.6.0
+
+Numbers now features the ten individual alien evolution images supplied by the user, stored unchanged in `public/alien/`; no creator attribution was provided. No network artwork is used. A spaceship marks stage zero, and each distinct completed Numbers level reveals the next image. Existing Numbers completions carry over, while replays and free practice add no stages. Adult-approved level completions count as before. Name's house and Alphabet's dragon keep their own progress. Resetting all progress resets the alien too.
+
+The service worker precaches all ten images under the new versioned cache and retains older caches for open clients. After an online update, close existing app windows and reopen; reload if needed before going offline.

@@ -59,7 +59,7 @@ test('export installs and reloads offline at its configured scope', async ({page
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([`${base}icon-192.png`, `${base}icon-512.png`]);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(async () => {
-    const cache = await caches.open('enrique-v1.5.0');
+    const cache = await caches.open('enrique-v1.6.0');
     const resources = [...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[src], link[rel=stylesheet]')].map(el => el instanceof HTMLScriptElement ? el.src : el.href).filter(url => url.includes('/_next/static/'));
     return resources.some(url => url.endsWith('.js')) && resources.some(url => url.endsWith('.css')) && (await Promise.all(resources.map(url => cache.match(url)))).every(Boolean);
   })).toBe(true);
@@ -185,7 +185,7 @@ test('name changes require confirmation and sections practice real guides', asyn
  await expect(page.getByRole('button',{name:/Diamond Trail/})).toBeEnabled();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ'); await page.getByRole('button',{name:'Lowercase'}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('abcdefghijklmnopqrstuvwxyz'); await page.getByRole('button',{name:'z',exact:true}).click(); await draw(page,paths.z); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toContainText('Wonderful writing');
  await page.getByRole('button',{name:'Back to map'}).click(); await page.getByRole('button',{name:'Numbers',exact:true}).click(); await page.getByRole('button',{name:'8',exact:true}).click(); await draw(page,paths['8']); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toBeVisible();
- await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.5.0/)).toBeVisible();
+ await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.6.0/)).toBeVisible();
 });
 
 test('all five worlds scale to a changed name and retain honest review', async ({page}) => {
@@ -281,7 +281,7 @@ test('a one-character name has a hidden exercise requiring adult review',async({
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).history[0].method)).toBe('adult');
 });
 
-test('sequential alphabet and numbers levels grow a persistent mansion only after real traces', async ({page})=>{
+test('sequential alphabet and numbers levels grow their own progress after real traces', async ({page})=>{
  await page.addInitScript(()=>{if(!localStorage.getItem('enrique-adventure-v1'))localStorage.setItem('enrique-adventure-v1',JSON.stringify({name:'Al',unlocked:1,completed:[],history:[],settings:{music:false,speech:false}}))});
  await page.goto('./');
  for(const [section,characters] of [['Alphabet','ABC'],['Numbers','012']] as const){
@@ -300,11 +300,11 @@ test('sequential alphabet and numbers levels grow a persistent mansion only afte
   }
   await expect(page.getByRole('button',{name:/^Level 2 /})).toBeEnabled();
  }
- await expect(page.locator('.mansion figcaption')).toContainText('2 / 30');
+ await expect(page.locator('.alien-progress figcaption')).toContainText('1 / 10');
  await page.reload();
  await expect(page.locator('.name-house figcaption')).toContainText('0 / 10');
  await page.getByRole('button',{name:'Numbers',exact:true}).click();
- await expect(page.locator('.mansion figcaption')).toContainText('2 / 30');
+ await expect(page.locator('.alien-progress figcaption')).toContainText('1 / 10');
 });
 
 test('Spanish first-level tutorial can be hidden and replayed without blocking drawing',async({page})=>{
@@ -379,17 +379,17 @@ test('dragon stages, real completion, replay, speech and offline persistence',as
  }
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).levels.alphabet)).toEqual([1]);
  const base=new URL(baseURL!).pathname;
- expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.5.0');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.6.0');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
  await context.setOffline(true);await page.reload();await page.getByRole('button',{name:'Alphabet',exact:true}).click();
  await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 1 / 10');
  await expect.poll(()=>page.locator('.dragon-picture img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBeGreaterThan(0);
 });
 
-test('completed alphabet shows final dragon while other sections keep mansion',async({page})=>{
+test('completed alphabet shows final dragon while other sections keep their own progress',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{name:[],alphabet:[1,2,3,4,5,6,7,8,9,10],numbers:[]}})));
  await page.goto('./');await expect(page.locator('.name-house')).toBeVisible();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click();await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 10 / 10');await expect(page.locator('.dragon-picture img')).toHaveAttribute('src',/stage-10\.png$/);await expect(page.locator('.mansion')).toHaveCount(0);
- await page.getByRole('button',{name:'Numbers',exact:true}).click();await expect(page.locator('.mansion')).toBeVisible();await expect(page.locator('.dragon-progress')).toHaveCount(0);
+ await page.getByRole('button',{name:'Numbers',exact:true}).click();await expect(page.locator('.alien-progress')).toBeVisible();await expect(page.locator('.dragon-progress')).toHaveCount(0);
 });
 
 test('guided fallback requires a real drawing, arithmetic gate and explicit adult approval', async ({page})=>{
@@ -450,9 +450,9 @@ test('name house artwork, offline cache and reduced motion', async ({page,contex
  expect(await page.locator('.page-transition').evaluate(e=>e.getAnimations().length)).toBe(0);
  await page.evaluate(()=>navigator.serviceWorker.ready);
  const base=new URL(baseURL!).pathname;
- expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.5.0');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`)))).every(Boolean)},base)).toBe(true);
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.6.0');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`)))).every(Boolean)},base)).toBe(true);
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); await expect(page.locator('.dragon-progress')).toBeVisible(); await expect(page.locator('.name-house')).toHaveCount(0);
- await page.getByRole('button',{name:'Numbers',exact:true}).click(); await expect(page.locator('.mansion')).toBeVisible();
+ await page.getByRole('button',{name:'Numbers',exact:true}).click(); await expect(page.locator('.alien-progress')).toBeVisible();
  await context.setOffline(true); await page.reload(); await expect(page.locator('.name-house img')).toBeVisible();
  expect(await page.locator('.name-house img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBe(512);
  const widths=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth);img.onerror=()=>reject(new Error('House unavailable offline'));img.src=`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`}))),base);
@@ -523,4 +523,41 @@ test('reduced motion replay is static and Spanish instructions explain lifting',
  const paths=page.locator('.demo-stroke');await expect(paths).toHaveCount(4);
  expect(await paths.first().evaluate(el=>getComputedStyle(el).animationName)).toBe('none');
  expect(await paths.first().evaluate(el=>getComputedStyle(el).strokeDashoffset)).toBe('0px');
+});
+
+test('Numbers alien stages persist through replay, offline and reset',async({page,context,baseURL})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('./'); await page.evaluate(()=>navigator.serviceWorker.ready);
+ await page.getByRole('button',{name:'Numbers',exact:true}).click();
+ await expect(page.locator('.alien-progress')).toHaveAttribute('aria-label','Numbers alien: 0 / 10');
+ await expect(page.locator('.alien-picture img')).toHaveCount(0);
+ for(let replay=0;replay<2;replay++){
+  await page.getByRole('button',{name:/^Level 1 /}).click();
+  for(const c of '012'){
+   await draw(page,paths[c]); await page.getByRole('button',{name:'Check my writing'}).click();
+   await expect(page.getByRole('status')).toContainText(c==='2'?'Amazing! Level complete!':'Wonderful writing');
+   await page.getByRole('button',{name:'Continue'}).click();
+  }
+  await expect(page.locator('.alien-progress')).toHaveAttribute('aria-label','Numbers alien: 1 / 10');
+ }
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).levels.numbers)).toEqual([1]);
+ const base=new URL(baseURL!).pathname;
+ expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.6.0');return (await Promise.all(Array.from({length:10},(_,i)=>cache.match(`${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`)))).every(Boolean)},base)).toBe(true);
+ await page.reload(); await context.setOffline(true); await page.getByRole('button',{name:'Numbers',exact:true}).click();
+ await expect(page.locator('.alien-picture img')).toHaveAttribute('src',/alien_stage_01\.png$/);
+ const sizes=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number[]>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve([img.naturalWidth,img.naturalHeight]);img.onerror=()=>reject(new Error('Alien image unavailable'));img.src=`${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`}))),base);
+ expect(sizes).toEqual(Array.from({length:10},()=>[256,365]));
+ expect(await page.locator('.page-transition').evaluate(e=>e.getAnimations().length)).toBe(0);
+ await context.setOffline(false);
+ await page.getByRole('button',{name:/Grown-ups: hold to open/}).click(); await page.getByRole('dialog',{name:'Grown-up check'}).getByRole('button',{name:'7',exact:true}).click();
+ await page.getByRole('button',{name:'Reset all progress'}).click(); await page.getByRole('button',{name:'Yes, reset'}).click();
+ await page.getByRole('button',{name:'Numbers',exact:true}).click(); await expect(page.locator('.alien-progress')).toHaveAttribute('aria-label','Numbers alien: 0 / 10');
+});
+
+test('completed Numbers shows stage ten independently of other sections',async({page})=>{
+ await page.addInitScript(()=>{if(!localStorage.getItem('enrique-adventure-v1'))localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{name:[],alphabet:[],numbers:[1,2,3,4,5,6,7,8,9,10]}}))});
+ await page.goto('./'); await expect(page.locator('.name-house')).toHaveAttribute('aria-label','Our growing mansion: 0 / 10');
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click(); await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 0 / 10');
+ await page.getByRole('button',{name:'Numbers',exact:true}).click(); await expect(page.locator('.alien-progress')).toHaveAttribute('aria-label','Numbers alien: 10 / 10'); await expect(page.locator('.alien-picture img')).toHaveAttribute('src',/alien_stage_10\.png$/);
 });

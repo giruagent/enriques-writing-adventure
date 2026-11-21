@@ -73,3 +73,5 @@ export function dragonStage(p:Progress):number {return new Set(p.levels.alphabet
 
 // Legacy completed worlds and modern levels describe the same Name achievements.
 export function nameHouseStage(p:Progress):number {return new Set([...p.completed,...p.levels.name].filter(n=>Number.isInteger(n)&&n>=1&&n<=10)).size;}
+
+export function alienStage(p:Progress):number {return new Set(p.levels.numbers.filter(n=>Number.isInteger(n)&&n>=1&&n<=10)).size;}
