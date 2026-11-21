@@ -29,3 +29,14 @@
 .stroke-help{margin:0 0 12px;color:#26385a;font-size:1rem;line-height:1.4}.stroke-help p{margin:0 0 8px}.demo-button{min-height:48px;background:#244d68;color:white;box-shadow:0 4px 0 #143246;font-size:1rem}.demo-panel{margin:12px 0;padding:12px;background:#eaf4ef;border-radius:12px}.demo-panel svg{display:block;width:min(100%,260px);height:auto;margin:auto;background:#fffdf3;border:2px solid #b7d4c6;border-radius:10px}.demo-stroke{stroke-dasharray:1;stroke-dashoffset:1;animation:draw-demo 1s linear forwards}.demo-reduced{display:none}@keyframes draw-demo{to{stroke-dashoffset:0}}@media(prefers-reduced-motion:reduce){.demo-stroke{stroke-dashoffset:0}.demo-reduced{display:block}}
 
 .alien-progress{margin:1.5rem auto;padding:1rem;max-width:320px;text-align:center;border-radius:24px;background:#fff;box-shadow:0 8px 24px #604c8120}.alien-picture{display:flex;align-items:center;justify-content:center;min-height:220px}.alien-picture img{display:block;width:min(100%,256px);height:auto;border-radius:12px}.alien-picture span{font-size:7rem}.alien-progress figcaption{padding:8px;font-weight:800}
+
+.book-nav,.stage-picker {display:flex; flex-wrap:wrap; gap:.65rem; justify-content:center; margin:1rem auto}
+.book-nav button,.stage-picker button,.album-view button {min-width:48px; min-height:48px}
+.album {max-width:1050px; margin:1rem auto; padding:clamp(1rem,3vw,2rem); background:#fff9e9; border:3px solid #e9c679; border-radius:28px; color:#493b55}
+.album h1 {font-size:clamp(2rem,5vw,3rem)}
+.album-view {display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:.75rem; align-items:center; text-align:center}
+.stage-card {background:white; border:3px solid #e7d6a9; border-radius:24px; padding:1rem; min-height:260px}
+.stage-card img {display:block; width:auto; max-width:100%; height: min(38vh,300px); object-fit:contain; margin:auto}
+.locked-stage {min-height:190px; display:grid; place-content:center}.locked-stage span {font-size:4rem}
+.stage-picker [aria-current] {outline:4px solid #9a55bd; outline-offset:2px}
+.trophy-grid {display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem}.trophy {border:2px solid #d9c49a; border-radius:20px; padding:1rem; background:#fff; text-align:center}.trophy.earned {background:#fff1b9; border-color:#d69c28}.trophy span {font-size:2.5rem}.trophy h3 {font-size:1.1rem}.trophy p {margin-bottom:0}
