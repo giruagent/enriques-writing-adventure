@@ -34,6 +34,24 @@ Constraints that shape every decision:
 - Vitest for unit tests, Playwright (Chromium) for end-to-end tests.
 - GitHub Pages for hosting, GitHub Actions for CI/CD.
 
+## Branch and pull request workflow
+
+**Never make project changes directly on `main` or push commits directly to it.**
+Before editing, check the current branch and working tree. If the current branch is
+`main`, create a task branch from the latest `origin/main` first. Use a descriptive
+prefix such as `feat/`, `fix/`, `docs/` or `chore/`.
+
+Commit coherent, reviewable increments on that branch and push the branch so the user
+can follow progress. Open or update a pull request targeting `main`; branch pushes and
+pull requests run `.github/workflows/ci.yml`. Resolve failures and review the final diff
+before merging the pull request into `main`. GitHub Pages deploys only after that merge.
+Do not use a direct push to `main` as a shortcut. If a change must be abandoned, close
+the pull request and delete its task branch after confirming it contains no needed work.
+
+Repository instructions cannot enforce GitHub permissions. To make this rule mandatory
+for all collaborators, configure `main` branch protection or a ruleset to require the
+`Verify branch` check and disallow direct pushes and force pushes.
+
 ## Repository map
 
 | Path | Responsibility |
@@ -54,6 +72,7 @@ Constraints that shape every decision:
 | `scripts/serve-export.mjs` | Static server used by the Playwright web server. |
 | `tests/*.test.ts` | Unit tests (game logic, guides, audio, albums). |
 | `tests/e2e/*.spec.ts` | End-to-end tests against the production export. |
+| `.github/workflows/ci.yml` | Branch and pull request verification; never deploys. |
 | `.github/workflows/pages.yml` | Build and deploy to GitHub Pages. |
 
 ## Section hero and map design
@@ -128,7 +147,7 @@ Invariants for artwork:
 ## Service worker and offline rules
 
 `public/sw.js` implements an app-shell cache with a versioned cache name
-(`enrique-v1.10.0-storybook-refresh` today).
+(`enrique-v1.10.1-adventure-books-nav` today).
 
 - **Any change to a precached asset or to the shell requires a new cache name.**
   Keeping the same name means installed clients never receive the change.
@@ -175,7 +194,7 @@ npm run lint          # eslint, must stay at 0 errors
 npm run typecheck     # tsc --noEmit
 npm test              # vitest: game, guides, audio, album
 npx playwright install chromium
-npm run test:e2e      # builds + serves the real export, 55 specs today
+npm run test:e2e      # builds + serves the real export, 58 specs today
 npm run build         # static export into out/
 ```
 
@@ -201,9 +220,12 @@ Notes:
 4. Add a `## Version X.Y.Z` section to `README.md` describing behaviour, storage and
    offline consequences, and any manual device verification still pending.
 5. Run the full verification sequence above; the e2e suite must be green.
-6. Commit on `main` with an imperative subject (`feat:`, `fix:`, `docs:`, `chore:`)
-   and push. The Pages workflow builds and deploys automatically.
-7. Wait for the workflow run to succeed, then verify the live site as described in
+6. Commit on the task branch with an imperative subject (`feat:`, `fix:`, `docs:`,
+   `chore:`), push it and open/update a pull request to `main`. Never push directly to
+   `main`.
+7. Wait for `Verify branch` to pass, review the diff, then merge the pull request.
+   The Pages workflow builds and deploys the merge on `main`.
+8. Wait for the Pages workflow to succeed, then verify the live site as described in
    [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md#verify-a-deployment).
 
 ## Known limitations

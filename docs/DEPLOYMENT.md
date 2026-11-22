@@ -2,11 +2,14 @@
 
 The site is published at **https://giruagent.github.io/enriques-writing-adventure/**
 from a static Next.js export. GitHub Pages serves the files; a GitHub Actions workflow
-builds them on every push to `main`.
+builds and deploys them after changes are merged into `main`.
 
 ## How the pipeline works
 
-`.github/workflows/pages.yml` runs on `push` to `main` and on manual dispatch:
+`.github/workflows/ci.yml` verifies pushes to task branches and pull requests targeting
+`main`. It runs lint, typecheck, unit tests, Playwright installation and the full E2E
+suite; it never deploys. `.github/workflows/pages.yml` runs on `push` to `main` and on
+manual dispatch:
 
 1. `npm ci` on Node 22.
 2. `npm run build` with `NEXT_PUBLIC_BASE_PATH=/enriques-writing-adventure`.
@@ -22,15 +25,30 @@ step fails.
 ## Normal release
 
 ```sh
-# from a clean main
+# Start from an up-to-date main and create a task branch before editing.
+git switch main
+git pull --ff-only origin main
+git switch -c feat/short-description
+
+# Make and push reviewable increments on the task branch.
 npm ci
 npm run lint && npm run typecheck && npm test
 npm run test:e2e
-git push origin main          # triggers the workflow
-gh run watch                  # or: gh run list --limit 3
+git push -u origin feat/short-description
+
+# Open/update the pull request; each branch push is verified by GitHub Actions.
+gh pr create --base main --fill
+gh pr checks --watch
+
+# After review and green checks, merge through the pull request.
+gh pr merge --squash --delete-branch
+# The merge to main triggers the Pages deployment.
+gh run watch
 ```
 
-Commit messages are imperative with a conventional prefix (`feat:`, `fix:`, `docs:`,
+Never push commits directly to `main`. Keep the pull request open while making
+incremental changes so reviewers can follow the branch diff and CI results. Commit
+messages are imperative with a conventional prefix (`feat:`, `fix:`, `docs:`,
 `chore:`). A release also bumps `package.json`, the footer version string in
 `components/Game.tsx`, the `CACHE` name in `public/sw.js`, and adds a
 `## Version X.Y.Z` section to `README.md`. See `AGENTS.md` for the full checklist.
@@ -53,9 +71,9 @@ BASE=https://giruagent.github.io/enriques-writing-adventure/
 # 1. The new service worker cache name is live
 curl -s "$BASE"sw.js | head -1
 
-# 2. A changed asset matches the local build byte for byte
-sha256sum public/name-house/casa_nivel_10.png
-curl -s "$BASE"name-house/casa_nivel_10.png | sha256sum
+# 2. The served worker matches the committed worker byte for byte
+sha256sum public/sw.js
+curl -fsS "$BASE"sw.js | sha256sum
 
 # 3. The shell mentions the expected version and screens
 curl -s "$BASE" | grep -o 'v1\.[0-9]*\.[0-9]*' | sort -u
@@ -70,21 +88,33 @@ failure.
 
 ## Rollback
 
-Fastest option — revert the commit and let the pipeline republish:
+Revert through a task branch and pull request so the release history stays reviewable:
 
 ```sh
+git switch main
+git pull --ff-only origin main
+git switch -c fix/revert-bad-release
 git revert --no-edit <bad-commit>
-git push origin main
+git push -u origin fix/revert-bad-release
+gh pr create --base main --fill
+gh pr checks --watch
+gh pr merge --squash --delete-branch
 gh run watch
 ```
 
-If the build itself is broken and you need the previous site immediately, publish the
-last known-good tree:
+If the build itself is broken and you need the previous site immediately, restore the
+last known-good tree on a task branch and merge it through a pull request:
 
 ```sh
+git switch main
+git pull --ff-only origin main
+git switch -c fix/restore-version-x-y-z
 git checkout <good-commit> -- .        # keep history, stage the old tree
 git commit -m "fix: restore version X.Y.Z"
-git push origin main
+git push -u origin fix/restore-version-x-y-z
+gh pr create --base main --fill
+gh pr checks --watch
+gh pr merge --squash --delete-branch
 ```
 
 Avoid hand-editing files in `out/`: it is generated and git-ignored.
