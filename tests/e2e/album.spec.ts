@@ -90,20 +90,20 @@ test('updated Name artwork persists and loads in the stage and album offline',as
  await page.evaluate(levels=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:10,completed:levels,history:[],levels:{name:levels,alphabet:[1,2],numbers:[1]}})),levels);
  await page.reload();
  await expect(page.locator('.name-house')).toHaveAttribute('aria-label','Our growing mansion: 10 / 10');
- await expect(page.locator('.name-house img')).toHaveAttribute('src',/casa_nivel_10\.png$/);
+ await expect(page.locator('.name-house img')).toHaveAttribute('src',/casa_nivel_10\.webp$/);
  await page.evaluate(()=>navigator.serviceWorker.ready);
  await page.reload(); await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
  const base=new URL(baseURL!).pathname;
- const expected=['fe893f5113d5e6dab586d081de8a16e8e91010eb907b563f39b729fdcc430a08','c6352cd2d950a469a0c9ad424494dcb26d48399db0f7c0f9d01046a3123a3d36','ada12fe17e21924b64ccbc94fb7457b37d3df5ee8604ce20f08bf7164dadb86d','c705aa585b5c048c7d9a931621c1667ab4befab4e63544a8657cc7b4fb7d32f9','e8bf57cc39e4e61d2cd2aae0f3ced422b6e1881a121815630d2bfc3b6b709ff3','db94a801f1d34d64d7d894a62466c57fd3688f6a1a89cf83b2de588701b4deab','5d40bdd563c27be8b0e1ba9dea8c0d3124e6a2854bfdfa07023bf248afee659a','44b9bab57946850abf0d93c1ba3b97eafc5456553bf18393d77a6be6098a0fd9','28f612115385ba187fe81948cc23549046b7e4f816b6746fc497bb76fffa8a26','d8aa389435c5f9db4a0d112a3460cb2629e10e698281a79e093ec504d7841048'];
- expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.7.0-house2');return Promise.all(Array.from({length:10},async(_,i)=>{const response=await cache.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`);if(!response)throw Error('Missing crop');const hash=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('')}))},base)).toEqual(expected);
+ const expected=['7506bb7fd32da17e91bd2af5c93cb99c1ef53a8004207669197c3b1c1cf24bf0','f8ff407168d1c2098cf51eda672c280f44c5086467ba1a18ffbb5aa1e9ac1f5c','f38b2ea2c7ee10dfa3575cac9397f0a19c89caa04edca84580918e82f1d2cbe1','1d7d72219511f65706d3876779bee7587312b1bc42db6fe5edadfe90d38faf59','b3f0f03fa9b3441627def35dce6e8710f00e056a5050a42ddee3b1ce710bbb32','0b8442ebfc4bf82cbb769dab11ffce7b74737a7b91a100424ee06f36c35ef789','de7fb358b75ed9b239a5e47af2cc9a1bed5b350edacf043cab8714287e08e214','ea72ebbd938a6082fb9047518a82d8a5a0aa5771d24111cd7907edc8e6ae44d9','7b66b815a5ca9c0bda3009f304dd79894b3482cfc7667f1b220cc3c31417f88f','f65d688c6ec24b825a20a2109272b0dc3cef1b3b675b267e4f8250e8a905f2db'];
+ expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.8.0-house-webp');return Promise.all(Array.from({length:10},async(_,i)=>{const response=await cache.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`);if(!response)throw Error('Missing crop');const hash=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('')}))},base)).toEqual(expected);
  await context.setOffline(true); await page.reload();
  await expect(page.locator('.name-house')).toHaveAttribute('aria-label','Our growing mansion: 10 / 10');
- expect(await page.locator('.name-house img').evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([251,268]);
+ expect(await page.locator('.name-house img').evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([838,694]);
  await page.getByRole('button',{name:'View evolution album'}).click();
  for(let i=1;i<=10;i++){
   await page.getByRole('button',{name:`Stage ${i}: ${i===10?'current':'unlocked'}`,exact:true}).click();
-  const img=page.locator('.stage-card img'); await expect(img).toHaveAttribute('src',new RegExp(`casa_nivel_${String(i).padStart(2,'0')}\\.png$`));
-  await expect.poll(()=>img.evaluate((el:HTMLImageElement,stage)=>el.complete&&el.naturalWidth===251&&el.naturalHeight===(stage<=5?259:268),i)).toBe(true);
+  const img=page.locator('.stage-card img'); await expect(img).toHaveAttribute('src',new RegExp(`casa_nivel_${String(i).padStart(2,'0')}\\.webp$`));
+  await expect.poll(()=>img.evaluate((el:HTMLImageElement)=>el.complete&&el.naturalWidth===838&&el.naturalHeight===694)).toBe(true);
  }
  await page.getByRole('button',{name:'Back to game'}).click();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 2 / 10');

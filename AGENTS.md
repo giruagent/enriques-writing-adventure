@@ -88,27 +88,32 @@ Rules that must not regress:
 
 All artwork is user-supplied and stored locally. Nothing is fetched at runtime.
 
-- `public/name-house/casa_nivel_01.png` … `casa_nivel_10.png` — ten row-major crops of
-  the supplied 1280 × 640 illustration, in ascending evolution order (cabin → mansion
-  with pool). Crop bounds must stay inside each panel's own frame; no neighbouring
-  panel may leak in.
+- `public/name-house/casa_nivel_01.webp` … `casa_nivel_10.webp` — ten row-major panels
+  cropped from the supplied 4460 × 1524 sheet (panel bounds 5 columns × 2 rows, each
+  838 × 694 px), in ascending evolution order (cabin → mansion with pool). Transparency
+  outside the rounded card is preserved; the crop must stay inside each panel's own
+  frame so no neighbouring panel leaks in.
 - `public/dragon/stage-1.png` … `stage-10.png` — crops of `supplied-sprite.jpg`
   (source coordinates in `lib/dragon.ts`).
 - `public/alien/alien_stage_01.png` … `alien_stage_10.png` — supplied images, unchanged.
 
 Invariants for artwork:
 
-- **Never rename or reorder asset paths.** Stage numbers are the contract between the
-  saved progress, the album, the service worker and the deployed cache.
-- A replacement sprite must keep the same file name and keep the illustration
-  recognisable at 320–420 CSS px.
+- **Never rename or reorder the stage numbers.** Number, folder and stage order are the
+  contract between saved progress, the album, the service worker and the deployed cache.
+- The Name house set is WebP (quality 88, method 6, `alpha_quality=100`): about 110 KiB
+  per panel and 1.1 MB for the ten, at three times the resolution of the previous PNG
+  set. Re-encoding that set must keep every panel at 838 × 694 so `width`/`height` in
+  `components/Game.tsx` and the assertions in the e2e suite stay true; if the size
+  changes, update both in the same commit.
+- A replacement sprite must keep the illustration recognisable at 320–420 CSS px.
 - When artwork changes, bump the cache (see below) or installed clients keep the old
   bytes indefinitely.
 
 ## Service worker and offline rules
 
 `public/sw.js` implements an app-shell cache with a versioned cache name
-(`enrique-v1.7.0-house2` today).
+(`enrique-v1.8.0-house-webp` today).
 
 - **Any change to a precached asset or to the shell requires a new cache name.**
   Keeping the same name means installed clients never receive the change.

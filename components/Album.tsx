@@ -9,7 +9,7 @@ export function Album({p,section,onBack}:{p:Progress;section:Section;onBack:()=>
  const heading=useRef<HTMLHeadingElement>(null); const [announcement,setAnnouncement]=useState('');
  useEffect(()=>{heading.current?.focus()},[]);
  const select=(n:number)=>{if(n===selected)return;setSelected(n);setAnnouncement(`${es?'Etapa':'Stage'} ${n}: ${n<=stage?(es?'desbloqueada':'unlocked'):(es?'bloqueada':'locked')}`)};
- const url=(n:number)=>section==='name'?`/name-house/casa_nivel_${String(n).padStart(2,'0')}.png`:section==='alphabet'?`/dragon/stage-${n}.png`:`/alien/alien_stage_${String(n).padStart(2,'0')}.png`;
+ const url=(n:number)=>section==='name'?`/name-house/casa_nivel_${String(n).padStart(2,'0')}.webp`:section==='alphabet'?`/dragon/stage-${n}.png`:`/alien/alien_stage_${String(n).padStart(2,'0')}.png`;
  return <section className="album" onKeyDown={e=>{if(e.key==='ArrowLeft'){e.preventDefault();select(Math.max(1,selected-1))} if(e.key==='ArrowRight'){e.preventDefault();select(Math.min(10,selected+1))}}}>
  <button onClick={onBack}>‹ {es?'Volver al juego':'Back to game'}</button><h1 ref={heading} tabIndex={-1}>📖 {names[p.settings.language][section]}</h1><p>{es?'Álbum de evolución':'Evolution album'} · {stage} / 10 {es?'niveles completados':'levels completed'}</p>
  <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</p>

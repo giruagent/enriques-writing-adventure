@@ -1,4 +1,4 @@
-const CACHE = 'enrique-v1.7.0-house2';
+const CACHE = 'enrique-v1.8.0-house-webp';
 const base = new URL(self.registration.scope).pathname;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -13,7 +13,7 @@ self.addEventListener('install', event => {
       .map(match => new URL(match[1], self.registration.scope).href);
     if (!assets.some(url => url.endsWith('.js')) || !assets.some(url => url.endsWith('.css'))) throw new Error('App shell assets missing');
     await cache.put(base, response);
-    await cache.addAll([...new Set(assets), `${base}manifest.webmanifest`, `${base}icon-192.png`, `${base}icon-512.png`, ...Array.from({length:10}, (_, i) => `${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`), ...Array.from({length:10}, (_, i) => `${base}dragon/stage-${i+1}.png`), ...Array.from({length:10}, (_, i) => new Request(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.png`, {cache: 'reload'}))]);
+    await cache.addAll([...new Set(assets), `${base}manifest.webmanifest`, `${base}icon-192.png`, `${base}icon-512.png`, ...Array.from({length:10}, (_, i) => `${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`), ...Array.from({length:10}, (_, i) => `${base}dragon/stage-${i+1}.png`), ...Array.from({length:10}, (_, i) => new Request(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`, {cache: 'reload'}))]);
   })());
 });
 // Keep older caches: an open page may still need its version's hashed assets.

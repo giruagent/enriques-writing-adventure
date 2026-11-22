@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {extname, resolve, sep} from 'node:path';
 const base = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const root = resolve('out');
-const types = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.webmanifest':'application/manifest+json', '.png':'image/png', '.txt':'text/plain'};
+const types = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.webmanifest':'application/manifest+json', '.png':'image/png', '.webp':'image/webp', '.txt':'text/plain'};
 createServer(async (req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname;
   if (base && path === base) {res.writeHead(301, {Location: `${base}/`}).end(); return;}
