@@ -1,5 +1,29 @@
 import {test,expect} from '@playwright/test';
 
+test('album follows the active adventure and trophies stay in the navigation',async({page})=>{
+ await page.goto('./');
+ await expect(page.locator('.section-heading-actions')).toContainText('View evolution album');
+ await expect(page.locator('.section-tabs')).toContainText('Trophy book');
+ await page.getByRole('button',{name:'Alphabet',exact:true}).click();
+ await expect(page.locator('.section-heading-actions')).toContainText('View evolution album');
+ await expect(page.locator('.section-heading-actions .progress-pill')).toContainText('Alphabet');
+ await page.getByRole('button',{name:'View evolution album'}).click();
+ await expect(page.getByRole('heading',{name:'ABC dragon',level:1})).toBeVisible();
+});
+
+for(const language of ['en','es'] as const) test(`book navigation fits phone, tablet and desktop in ${language}`,async({page})=>{
+ await page.addInitScript(lang=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],settings:{language:lang}})),language);
+ for(const width of [390,768,1280]){
+  await page.setViewportSize({width,height:1024});
+  await page.goto('./');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`map width ${width}`).toBe(true);
+  const album=page.getByRole('button',{name:language==='en'?'View evolution album':'Ver álbum de evolución'});
+  const trophy=page.getByRole('button',{name:language==='en'?'Trophy book':'Libro de logros'});
+  await expect(album).toBeVisible(); await expect(trophy).toBeVisible();
+  for(const button of [album,trophy]){const box=await button.boundingBox();expect(box).not.toBeNull();expect(box!.width).toBeGreaterThanOrEqual(44);expect(box!.height).toBeGreaterThanOrEqual(44)}
+ }
+});
+
 test('albums hide locked artwork, navigate, and preserve legacy progress across sections and offline',async({page,context})=>{
  await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:3,completed:[1,2],history:[],levels:{name:[2],alphabet:[1,2,3,4,5],numbers:[1]}})));
  await page.goto('./');
@@ -51,7 +75,7 @@ test('book focus returns to each opener across switching and reopening',async({p
  await expect(page.getByRole('heading',{name:'Name house',level:1})).toBeFocused();
  await page.keyboard.press('Tab'); await expect(page.getByRole('button',{name:'Next stage'})).toBeFocused();
  await page.getByRole('button',{name:'Back to game'}).click(); await expect(album).toBeFocused();
- await page.keyboard.press('Tab'); await expect(trophy).toBeFocused(); await page.keyboard.press('Enter');
+ await trophy.focus(); await page.keyboard.press('Enter');
  await expect(page.getByRole('heading',{name:'Trophy book',level:1})).toBeFocused();
  await page.getByRole('button',{name:'Back to game'}).click(); await expect(trophy).toBeFocused();
  await album.click(); await expect(page.getByRole('heading',{name:'Name house',level:1})).toBeFocused();
@@ -94,7 +118,7 @@ test('updated Name artwork persists and loads in the stage and album offline',as
  await page.reload(); await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
  const base=new URL(baseURL!).pathname;
  const expected=['7506bb7fd32da17e91bd2af5c93cb99c1ef53a8004207669197c3b1c1cf24bf0','f8ff407168d1c2098cf51eda672c280f44c5086467ba1a18ffbb5aa1e9ac1f5c','f38b2ea2c7ee10dfa3575cac9397f0a19c89caa04edca84580918e82f1d2cbe1','1d7d72219511f65706d3876779bee7587312b1bc42db6fe5edadfe90d38faf59','b3f0f03fa9b3441627def35dce6e8710f00e056a5050a42ddee3b1ce710bbb32','0b8442ebfc4bf82cbb769dab11ffce7b74737a7b91a100424ee06f36c35ef789','de7fb358b75ed9b239a5e47af2cc9a1bed5b350edacf043cab8714287e08e214','ea72ebbd938a6082fb9047518a82d8a5a0aa5771d24111cd7907edc8e6ae44d9','7b66b815a5ca9c0bda3009f304dd79894b3482cfc7667f1b220cc3c31417f88f','f65d688c6ec24b825a20a2109272b0dc3cef1b3b675b267e4f8250e8a905f2db'];
- expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.10.0-storybook-refresh');return Promise.all(Array.from({length:10},async(_,i)=>{const response=await cache.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`);if(!response)throw Error('Missing crop');const hash=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('')}))},base)).toEqual(expected);
+ expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.10.1-adventure-books-nav');return Promise.all(Array.from({length:10},async(_,i)=>{const response=await cache.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`);if(!response)throw Error('Missing crop');const hash=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('')}))},base)).toEqual(expected);
  await context.setOffline(true); await page.reload();
  await expect(page.locator('.name-house')).toHaveAttribute('aria-label','Our growing mansion: 10 / 10');
  expect(await page.locator('.name-house img').evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([838,694]);

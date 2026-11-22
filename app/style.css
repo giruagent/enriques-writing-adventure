@@ -434,25 +434,6 @@ header {
 
 /* Map --------------------------------------------------------------------- */
 
-.book-nav {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  max-width: 660px;
-  margin: 18px auto 0;
-  padding-inline: clamp(12px, 4vw, 0px);
-}
-
-.book-nav button {
-  min-block-size: 48px;
-  padding: 11px 14px;
-  border-radius: 999px;
-  background: #f1f8f3;
-  box-shadow: 0 4px 0 #c9dbd2;
-  font-size: .88rem;
-  line-height: 1.2;
-}
-
 .section-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -480,6 +461,12 @@ header {
   box-shadow: 0 4px 0 #0d2d3b;
 }
 
+.section-tabs .trophy-nav {
+  flex: 0 1 auto;
+  background: #f1f8f3;
+  box-shadow: 0 3px 0 #c9dbd2;
+}
+
 .world-section {
   padding: 52px var(--content-pad) 70px;
 }
@@ -501,6 +488,24 @@ header {
   margin: 6px 0 0;
   font-size: clamp(1.5rem, 2.4vw, 2.2rem);
   letter-spacing: -.03em;
+}
+
+.section-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.album-nav {
+  min-block-size: 44px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: #f1f8f3;
+  box-shadow: 0 3px 0 #c9dbd2;
+  font-size: .88rem;
+  line-height: 1.2;
 }
 
 .progress-pill {
@@ -1586,12 +1591,11 @@ footer span {
     font-size: .76rem;
   }
 
-  .book-nav {
-    gap: 8px;
-    padding-inline: 4%;
+  .section-heading-actions {
+    justify-content: flex-start;
   }
 
-  .book-nav button {
+  .album-nav {
     padding: 10px 8px;
     font-size: .76rem;
   }
@@ -1713,7 +1717,7 @@ footer span {
   .level-card,
   .glyph-grid button,
   .section-tabs button,
-  .book-nav button {
+  .album-nav {
     will-change: transform;
   }
 }

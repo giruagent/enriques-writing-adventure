@@ -127,3 +127,10 @@ The visual system has been rebuilt around the iPad and tablet target while keepi
 Level and world cards now show completed, current and locked states explicitly, the current level is announced with `aria-current`, the play screen shows a step progress bar, and the grown-up gear keeps a 44 × 44 target on phones (the label is hidden, not the icon). The trophy book now says “1 level in each adventure” / “1 nivel en cada aventura” and both books show progress bars. Focus moves to the new screen heading and the page scrolls to the top after navigation, while returning from a book restores focus to the button that opened it.
 
 No storage key, progress model or artwork path changed. Existing saves, stages and badges are preserved. The app shell changed, so the service worker uses `enrique-v1.10.0-storybook-refresh`; close existing app windows online and reopen, then reload once if needed before going offline. Still pending: verify the sticky header, safe-area padding, touch targets, two-column play layout, and reduced-motion transitions on a physical iPad in portrait and landscape. Playwright Chromium covers 320, 390, 768 and 1024 px widths plus the new design regression specs.
+
+
+## Version 1.10.1: adventure book navigation
+
+The evolution album button now sits beside the progress indicator for the active adventure, so it is close to the levels and artwork it tracks. The trophy book button is part of the adventure navigation. Both buttons retain English and Spanish labels, and returning from either book restores focus to its opening button.
+
+Progress and saved data are unchanged. The app shell changed, so the service worker uses `enrique-v1.10.1-adventure-books-nav`; open the app online and close/reopen existing app windows to receive the update before going offline.
