@@ -21,6 +21,15 @@ The build creates `out/`. By default it targets the domain root, including for D
 
 For GitHub Pages, the site is built and published by `.github/workflows/pages.yml` on every push to `main`: it runs `npm ci`, builds with `NEXT_PUBLIC_BASE_PATH=/enriques-writing-adventure`, uploads `out/` and deploys it through GitHub Actions Pages. The Pages source must stay set to **GitHub Actions**, not a branch. The resulting site is served at `https://giruagent.github.io/enriques-writing-adventure/`; change the base path in the workflow if the repository path changes. The export includes `.nojekyll` so GitHub serves Next.js `_next` assets. Do not publish by hand-editing `out/` — the directory is generated and git-ignored.
 
+## Contributing changes
+
+Work on a new task branch for every change; never commit or push directly to `main`.
+Push incremental commits to the branch and open a pull request targeting `main` so the
+diff and branch verification remain visible as work progresses. `.github/workflows/ci.yml`
+runs checks on task branches and pull requests. Merge through the pull request after
+review and green checks; only that merge triggers the GitHub Pages deployment. See
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the release steps.
+
 To build the same project-path export locally, run `NEXT_PUBLIC_BASE_PATH=/enriques-writing-adventure npm run build`. Serve `out/` under that path, not at the server root. `npm run test:e2e` builds and serves that production export and exercises it with Playwright, including offline reload. To run the same tests for a root export, use `NEXT_PUBLIC_BASE_PATH='' npm run test:e2e`. The base path must be empty for root or start with `/` and have no trailing slash.
 
 ## Maintaining this project
