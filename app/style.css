@@ -26,6 +26,23 @@
 @media (prefers-reduced-motion: reduce) { .celebration, .celebration-stars { animation: none; } }
 
 .name-house{margin:0;background:#d8f3ed;text-align:center;min-width:0}.name-house-picture{display:flex;align-items:center;justify-content:center;min-height:230px}.name-house-picture img{display:block;width:100%;height:auto;max-width:512px;object-fit:contain}.name-house-picture span{font-size:6rem}.name-house figcaption{padding:8px;font-weight:800}
+
+/* Keep Alphabet and Numbers inside the same welcoming hero system as Name. */
+.section-hero{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
+.section-hero-art{display:grid;place-items:center;padding:1.25rem;background:#c7ebe3;min-width:0}
+.section-hero-art .dragon-progress,.section-hero-art .alien-progress{width:min(100%,390px);margin:0;padding:1rem;border:3px solid #fffdf5;border-radius:26px;background:#fffaf0;box-shadow:0 8px 0 #a8d2c7,0 14px 24px #385c5020}
+.section-hero-art .dragon-picture,.section-hero-art .alien-picture{min-height:clamp(220px,27vw,300px);height:auto;aspect-ratio:1.2}
+.section-hero-art .dragon-picture img,.section-hero-art .alien-picture img{max-block-size:100%;max-inline-size:100%;object-fit:contain}
+.section-content{padding-block-start:2.5rem}
+.section-content .section-heading{align-items:end}
+.practice-block{padding:clamp(1rem,2.5vw,2rem);margin-block:1.5rem;background:#fffdf5;border:2px solid #d5ebe1;border-radius:24px}
+.practice-block h2{margin-block-end:.75rem}
+.practice-block .level-grid{margin-block:1rem .25rem}
+.free-practice>p{margin-block-end:1rem;color:#54716f}
+.free-practice .section-tabs{padding:0 0 1rem}
+
+@media(max-width:850px){.section-hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.section-hero-art{padding:1rem}}
+@media(max-width:560px){.section-hero{grid-template-columns:1fr}.section-hero-art{padding:1.25rem}.section-hero-art .dragon-progress,.section-hero-art .alien-progress{width:min(100%,360px)}.section-content{padding-block-start:2rem}.section-content .section-heading{align-items:flex-start;gap:.75rem;flex-direction:column}}
 .stroke-help{margin:0 0 12px;color:#26385a;font-size:1rem;line-height:1.4}.stroke-help p{margin:0 0 8px}.demo-button{min-height:48px;background:#244d68;color:white;box-shadow:0 4px 0 #143246;font-size:1rem}.demo-panel{margin:12px 0;padding:12px;background:#eaf4ef;border-radius:12px}.demo-panel svg{display:block;width:min(100%,260px);height:auto;margin:auto;background:#fffdf3;border:2px solid #b7d4c6;border-radius:10px}.demo-stroke{stroke-dasharray:1;stroke-dashoffset:1;animation:draw-demo 1s linear forwards}.demo-reduced{display:none}@keyframes draw-demo{to{stroke-dashoffset:0}}@media(prefers-reduced-motion:reduce){.demo-stroke{stroke-dashoffset:0}.demo-reduced{display:block}}
 
 .alien-progress{margin:1.5rem auto;padding:1rem;max-width:320px;text-align:center;border-radius:24px;background:#fff;box-shadow:0 8px 24px #604c8120}.alien-picture{display:flex;align-items:center;justify-content:center;min-height:220px}.alien-picture img{display:block;width:min(100%,256px);height:auto;border-radius:12px}.alien-picture span{font-size:7rem}.alien-progress figcaption{padding:8px;font-weight:800}

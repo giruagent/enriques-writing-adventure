@@ -59,7 +59,7 @@ test('export installs and reloads offline at its configured scope', async ({page
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([`${base}icon-192.png`, `${base}icon-512.png`]);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(async () => {
-    const cache = await caches.open('enrique-v1.8.0-house-webp');
+    const cache = await caches.open('enrique-v1.9.0-shared-adventure-hero');
     const resources = [...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[src], link[rel=stylesheet]')].map(el => el instanceof HTMLScriptElement ? el.src : el.href).filter(url => url.includes('/_next/static/'));
     return resources.some(url => url.endsWith('.js')) && resources.some(url => url.endsWith('.css')) && (await Promise.all(resources.map(url => cache.match(url)))).every(Boolean);
   })).toBe(true);
@@ -185,7 +185,7 @@ test('name changes require confirmation and sections practice real guides', asyn
  await expect(page.getByRole('button',{name:/Diamond Trail/})).toBeEnabled();
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ'); await page.getByRole('button',{name:'Lowercase'}).click(); expect((await page.locator('.glyph-grid button').allTextContents()).join('')).toBe('abcdefghijklmnopqrstuvwxyz'); await page.getByRole('button',{name:'z',exact:true}).click(); await draw(page,paths.z); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toContainText('Wonderful writing');
  await page.getByRole('button',{name:'Back to map'}).click(); await page.getByRole('button',{name:'Numbers',exact:true}).click(); await page.getByRole('button',{name:'8',exact:true}).click(); await draw(page,paths['8']); await page.getByRole('button',{name:'Check my writing'}).click(); await expect(page.getByRole('status')).toBeVisible();
- await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.8.0/)).toBeVisible();
+ await page.reload(); await expect(page.getByText('Hello, Al!')).toBeVisible(); await expect(page.getByText(/v1.9.0/)).toBeVisible();
 });
 
 test('all five worlds scale to a changed name and retain honest review', async ({page}) => {
@@ -379,7 +379,7 @@ test('dragon stages, real completion, replay, speech and offline persistence',as
  }
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).levels.alphabet)).toEqual([1]);
  const base=new URL(baseURL!).pathname;
- expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.8.0-house-webp');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.9.0-shared-adventure-hero');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}dragon/stage-${i+1}.png`)))).every(Boolean)},base)).toBe(true);
  await context.setOffline(true);await page.reload();await page.getByRole('button',{name:'Alphabet',exact:true}).click();
  await expect(page.locator('.dragon-progress')).toHaveAttribute('aria-label','Alphabet dragon: 1 / 10');
  await expect.poll(()=>page.locator('.dragon-picture img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBeGreaterThan(0);
@@ -450,13 +450,43 @@ test('name house artwork, offline cache and reduced motion', async ({page,contex
  expect(await page.locator('.page-transition').evaluate(e=>e.getAnimations().length)).toBe(0);
  await page.evaluate(()=>navigator.serviceWorker.ready);
  const base=new URL(baseURL!).pathname;
- expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.8.0-house-webp');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`)))).every(Boolean)},base)).toBe(true);
+ expect(await page.evaluate(async base=>{const c=await caches.open('enrique-v1.9.0-shared-adventure-hero');return (await Promise.all(Array.from({length:10},(_,i)=>c.match(`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`)))).every(Boolean)},base)).toBe(true);
  await page.getByRole('button',{name:'Alphabet',exact:true}).click(); await expect(page.locator('.dragon-progress')).toBeVisible(); await expect(page.locator('.name-house')).toHaveCount(0);
  await page.getByRole('button',{name:'Numbers',exact:true}).click(); await expect(page.locator('.alien-progress')).toBeVisible();
  await context.setOffline(true); await page.reload(); await expect(page.locator('.name-house img')).toBeVisible();
  expect(await page.locator('.name-house img').evaluate((e:HTMLImageElement)=>e.naturalWidth)).toBe(838);
  const widths=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth);img.onerror=()=>reject(new Error('House unavailable offline'));img.src=`${base}name-house/casa_nivel_${String(i+1).padStart(2,'0')}.webp`}))),base);
  expect(widths).toEqual(Array(10).fill(838));
+});
+
+test('Alphabet and Numbers use the shared adventure hero and retain their own progress',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('enrique-adventure-v1',JSON.stringify({unlocked:1,completed:[],history:[],levels:{name:[],alphabet:[1],numbers:[1]}})));
+ await page.goto('./');
+ for(const section of ['Alphabet','Numbers'] as const){
+  await page.getByRole('button',{name:section,exact:true}).click();
+  await expect(page.locator('.section-hero')).toBeVisible();
+  await expect(page.locator('.section-hero h1')).toHaveText('Hello, Enrique!');
+  await expect(page.locator(section==='Alphabet'?'.dragon-progress':'.alien-progress')).toBeVisible();
+  await expect(page.locator(section==='Alphabet'?'.alien-progress':'.dragon-progress')).toHaveCount(0);
+  await expect(page.locator('.section-content .progress-pill')).toContainText(section==='Alphabet'?'Alphabet: 1 / 10':'Numbers: 1 / 10');
+  const hero=page.locator('.section-hero');
+  const art=hero.locator('img');
+  await expect(art).toBeVisible();
+  await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+  await hero.getByRole('link',{name:"Let’s play!"}).click();
+  await expect(page.locator('#section-levels')).toBeInViewport();
+  await expect(page.locator('#section-levels button').first()).toBeEnabled();
+  await expect(page.locator('#section-levels button').nth(2)).toBeDisabled();
+ }
+ for(const width of [390,768]){
+  await page.setViewportSize({width,height:900});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const hero=await page.locator('.section-hero').boundingBox();
+  const art=await page.locator('.section-hero-art').boundingBox();
+  expect(hero).not.toBeNull(); expect(art).not.toBeNull();
+  expect(art!.x).toBeGreaterThanOrEqual(hero!.x);
+  expect(art!.x+art!.width).toBeLessThanOrEqual(hero!.x+hero!.width+.5);
+ }
 });
 
 test('rapid section navigation leaves a usable latest screen',async({page})=>{
@@ -543,7 +573,7 @@ test('Numbers alien stages persist through replay, offline and reset',async({pag
  }
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('enrique-adventure-v1')!).levels.numbers)).toEqual([1]);
  const base=new URL(baseURL!).pathname;
- expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.8.0-house-webp');return (await Promise.all(Array.from({length:10},(_,i)=>cache.match(`${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`)))).every(Boolean)},base)).toBe(true);
+ expect(await page.evaluate(async base=>{const cache=await caches.open('enrique-v1.9.0-shared-adventure-hero');return (await Promise.all(Array.from({length:10},(_,i)=>cache.match(`${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`)))).every(Boolean)},base)).toBe(true);
  await page.reload(); await context.setOffline(true); await page.getByRole('button',{name:'Numbers',exact:true}).click();
  await expect(page.locator('.alien-picture img')).toHaveAttribute('src',/alien_stage_01\.png$/);
  const sizes=await page.evaluate(async base=>Promise.all(Array.from({length:10},(_,i)=>new Promise<number[]>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve([img.naturalWidth,img.naturalHeight]);img.onerror=()=>reject(new Error('Alien image unavailable'));img.src=`${base}alien/alien_stage_${String(i+1).padStart(2,'0')}.png`}))),base);

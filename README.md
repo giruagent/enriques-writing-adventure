@@ -111,3 +111,11 @@ The ten Name house stages have been replaced with a new, higher-resolution set c
 The panels are stored as WebP at quality 88 (method 6, lossless alpha) in `public/name-house/casa_nivel_01.webp` … `casa_nivel_10.webp`. The whole set is 1.08 MB, slightly less than the previous PNG set (1.25 MB) despite the much larger dimensions. A visual comparison at 2× zoom against the lossless source crops shows no blurring, ringing, banding or colour shift; measured SSIM at display size is 0.9996.
 
 Stage numbers, the ten-stage order and all saved progress are unchanged; existing clients simply download smaller, sharper files. The extension changed from `.png` to `.webp`, so the service worker uses a new cache (`enrique-v1.8.0-house-webp`) and precaches the new files. Close existing app windows online and reopen, then reload once more if needed before going offline.
+
+## Version 1.9.0: one adventure hero system
+
+Alphabet and Numbers now use the same welcoming split-hero layout as Name: a personalized greeting, a brief description specific to that adventure, a clear jump-to-levels button, and the section's evolving companion artwork. The Alphabet hero features the dragon; the Numbers hero features the alien. Each keeps its own stage count and progress-derived artwork. The Name Adventure design and saved progress are unchanged.
+
+Below the hero, each section now has a matching progress heading, a dedicated level panel, and a separate free-practice panel. The Alphabet case toggle and both free-practice glyph grids remain available. The layout stacks on phones; a new end-to-end check exercises both sections, their artwork and level state at phone and tablet widths. No new interaction changes progression rules.
+
+The app shell changed, so the service worker uses `enrique-v1.9.0-shared-adventure-hero`. Existing clients update while online and keep their progress; close and reopen the app once to activate the new shell.

@@ -56,6 +56,21 @@ Constraints that shape every decision:
 | `tests/e2e/*.spec.ts` | End-to-end tests against the production export. |
 | `.github/workflows/pages.yml` | Build and deploy to GitHub Pages. |
 
+## Section hero and map design
+
+Name, Alphabet and Numbers share a single first-screen pattern: the app's existing
+mint split hero, personalized greeting, short adventure-specific sentence, one clear
+"Let's play"/"¡A jugar!" action and a large illustration of that section's progression.
+Name uses the growing house; Alphabet uses the dragon; Numbers uses the alien. Keep the
+hero copy and image specific to its adventure instead of showing Name copy in the other
+sections. The `Dragon` and `Alien` progress widgets stay the single source of the image,
+caption and section stage. The level and free-practice controls follow beneath the hero.
+
+When adjusting this layout, verify it at 1280 px, 768 px and 390 px widths in both
+languages; preserve sensible stacking on phones, the stage-specific progress pill,
+keyboard focus visibility, and no horizontal overflow. The hero CTA is an in-page anchor
+to the level list, not a new game action.
+
 ## Data model and invariants
 
 `Progress` (in `lib/game.ts`) is the only persisted state:
@@ -113,7 +128,7 @@ Invariants for artwork:
 ## Service worker and offline rules
 
 `public/sw.js` implements an app-shell cache with a versioned cache name
-(`enrique-v1.8.0-house-webp` today).
+(`enrique-v1.9.0-shared-adventure-hero` today).
 
 - **Any change to a precached asset or to the shell requires a new cache name.**
   Keeping the same name means installed clients never receive the change.
