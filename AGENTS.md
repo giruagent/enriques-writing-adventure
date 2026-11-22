@@ -128,7 +128,7 @@ Invariants for artwork:
 ## Service worker and offline rules
 
 `public/sw.js` implements an app-shell cache with a versioned cache name
-(`enrique-v1.9.0-shared-adventure-hero` today).
+(`enrique-v1.10.0-storybook-refresh` today).
 
 - **Any change to a precached asset or to the shell requires a new cache name.**
   Keeping the same name means installed clients never receive the change.
@@ -175,7 +175,7 @@ npm run lint          # eslint, must stay at 0 errors
 npm run typecheck     # tsc --noEmit
 npm test              # vitest: game, guides, audio, album
 npx playwright install chromium
-npm run test:e2e      # builds + serves the real export, 47 specs today
+npm run test:e2e      # builds + serves the real export, 55 specs today
 npm run build         # static export into out/
 ```
 

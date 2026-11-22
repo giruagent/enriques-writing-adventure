@@ -1,4 +1,4 @@
-const CACHE = 'enrique-v1.9.0-shared-adventure-hero';
+const CACHE = 'enrique-v1.10.0-storybook-refresh';
 const base = new URL(self.registration.scope).pathname;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
