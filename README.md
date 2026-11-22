@@ -143,3 +143,10 @@ No storage key, progress model or artwork path changed. Existing saves, stages a
 The evolution album button now sits beside the progress indicator for the active adventure, so it is close to the levels and artwork it tracks. The trophy book button is part of the adventure navigation. Both buttons retain English and Spanish labels, and returning from either book restores focus to its opening button.
 
 Progress and saved data are unchanged. The app shell changed, so the service worker uses `enrique-v1.10.1-adventure-books-nav`; open the app online and close/reopen existing app windows to receive the update before going offline.
+
+
+## Version 1.10.2: larger section level cards
+
+Alphabet and Numbers now use the same two-row, five-column card layout as Name on tablet and desktop widths. The larger cards show a level number, a representative character, and the full level contents, with clear completed, current, and locked states. Phones keep a two-column layout so the cards remain readable and easy to tap.
+
+Progress and saved data are unchanged. The app shell changed, so the service worker uses `enrique-v1.10.2-level-card-grids`; open the app online and close/reopen existing app windows to receive the update before going offline. The new layout still needs a physical iPad check.
