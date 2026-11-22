@@ -1,4 +1,4 @@
-const CACHE = 'enrique-v1.10.1-adventure-books-nav';
+const CACHE = 'enrique-v1.10.2-level-card-grids';
 const base = new URL(self.registration.scope).pathname;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

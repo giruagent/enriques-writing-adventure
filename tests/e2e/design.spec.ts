@@ -68,6 +68,32 @@ test('map, play and the grown-up corner avoid horizontal overflow at 320 and 102
   }
 });
 
+for (const language of ['en', 'es'] as const) {
+  test(`section level cards match Name at phone, tablet and desktop widths (${language})`, async ({page}) => {
+    await page.addInitScript(lang => localStorage.setItem('enrique-adventure-v1', JSON.stringify({
+      unlocked: 1, completed: [], history: [],
+      levels: {name: [], alphabet: [], numbers: []},
+      settings: {language: lang, music: false, speech: false},
+    })), language);
+
+    for (const [width, columns] of [[1280, 5], [768, 3], [390, 2]] as const) {
+      await page.setViewportSize({width, height: 1024});
+      await page.goto('./');
+      const nameColumns = await page.locator('.world-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+      expect(nameColumns, `Name columns at ${width}`).toBe(columns);
+
+      for (const section of [language === 'en' ? 'Alphabet' : 'Abecedario', language === 'en' ? 'Numbers' : 'Números']) {
+        await page.getByRole('button', {name: section, exact: true}).click();
+        const grid = page.locator('.level-grid');
+        await expect(grid.locator('.level-card')).toHaveCount(10);
+        const sectionColumns = await grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+        expect(sectionColumns, `${section} columns at ${width}`).toBe(columns);
+        expect(await noOverflow(page), `${section} at ${width}`).toBe(true);
+      }
+    }
+  });
+}
+
 test('iPad landscape keeps the pad and its tools inside the first viewport', async ({page}) => {
   await page.setViewportSize({width: 1024, height: 768});
   await page.goto('./');
